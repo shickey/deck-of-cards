@@ -1047,6 +1047,7 @@ var Deck = (function () {
   Deck.Card = _card;
   Deck.prefix = prefix;
   Deck.translate = translate;
+  Deck.util = { fisherYates: fisherYates };
 
   return Deck;
 })();
