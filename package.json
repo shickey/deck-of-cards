@@ -11,7 +11,16 @@
     "build-css": "stylus -u nib css/index.styl -o example/example.css",
     "build-html": "jade -P views/index.jade -o example/",
     "postversion": "git push --tags",
-    "postinstall": "opencollective-postinstall || true"
+    "postinstall": "opencollective-postinstall || true",
+    "watch": "npm-watch"
+  },
+  "watch": {
+    "build-js": {
+      "patterns": [
+        "lib"
+      ],
+      "extensions": "js"
+    }
   },
   "repository": {
     "type": "git",
@@ -39,6 +48,7 @@
     "uglify-js": "^2.4.24"
   },
   "dependencies": {
+    "npm-watch": "^0.6.0",
     "opencollective-postinstall": "^2.0.2"
   },
   "collective": {

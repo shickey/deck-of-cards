@@ -532,41 +532,37 @@ var Deck = (function () {
     return plusminus * value;
   }
 
-  function fisherYates(array) {
-    var rnd, temp;
-
-    for (var i = array.length - 1; i; i--) {
-      rnd = Math.random() * i | 0;
-      temp = array[i];
-      array[i] = array[rnd];
-      array[rnd] = temp;
-    }
-
-    return array;
-  }
-
   function fontSize() {
     return window.getComputedStyle(document.body).getPropertyValue('font-size').slice(0, -2);
   }
 
-  var ____fontSize;
+  /**
+   * "Shuffles" the deck using the same animation as the shuffle module
+   * but leaves the deck in the specific order passed in the params
+   */
 
-  var shuffle = {
+  var shuffleTo = {
     deck: function deck(_deck3) {
-      _deck3.shuffle = _deck3.queued(shuffle);
+      _deck3.shuffleTo = _deck3.queued(shuffleTo);
 
-      function shuffle(next) {
+      function shuffleTo(next, params) {
         var cards = _deck3.cards;
+        var order = params.order;
 
-        ____fontSize = fontSize();
+        var newCards = Array(cards.length);
+        order.forEach(function (cardVal, i) {
+          newCards[i] = cards.find(function (card) {
+            return card.i == cardVal;
+          });
+        });
 
-        fisherYates(cards);
+        _deck3.cards = newCards;
 
-        cards.forEach(function (card, i) {
+        _deck3.cards.forEach(function (card, i) {
           card.pos = i;
 
-          card.shuffle(function (i) {
-            if (i === cards.length - 1) {
+          card.shuffleTo(function (i) {
+            if (i === _deck3.cards.length - 1) {
               next();
             }
           });
@@ -574,11 +570,12 @@ var Deck = (function () {
         return;
       }
     },
-
     card: function card(_card3) {
       var $el = _card3.$el;
 
-      _card3.shuffle = function (cb) {
+      var fontSize$$ = fontSize();
+
+      _card3.shuffleTo = function (cb) {
         var i = _card3.pos;
         var z = i / 4;
         var delay = i * 2;
@@ -587,7 +584,7 @@ var Deck = (function () {
           delay: delay,
           duration: 200,
 
-          x: plusminus(Math.random() * 40 + 20) * ____fontSize / 16,
+          x: plusminus(Math.random() * 40 + 20) * fontSize$$ / 16,
           y: -z,
           rot: 0
         });
@@ -611,14 +608,89 @@ var Deck = (function () {
     }
   };
 
+  function fisherYates(array) {
+    var rnd, temp;
+
+    for (var i = array.length - 1; i; i--) {
+      rnd = Math.floor(Math.random() * (i + 1));
+      temp = array[i];
+      array[i] = array[rnd];
+      array[rnd] = temp;
+    }
+
+    return array;
+  }
+
+  var ____fontSize;
+
+  var shuffle = {
+    deck: function deck(_deck4) {
+      _deck4.shuffle = _deck4.queued(shuffle);
+
+      function shuffle(next) {
+        var cards = _deck4.cards;
+
+        ____fontSize = fontSize();
+
+        fisherYates(cards);
+
+        cards.forEach(function (card, i) {
+          card.pos = i;
+
+          card.shuffle(function (i) {
+            if (i === cards.length - 1) {
+              next();
+            }
+          });
+        });
+        return;
+      }
+    },
+
+    card: function card(_card4) {
+      var $el = _card4.$el;
+
+      _card4.shuffle = function (cb) {
+        var i = _card4.pos;
+        var z = i / 4;
+        var delay = i * 2;
+
+        _card4.animateTo({
+          delay: delay,
+          duration: 200,
+
+          x: plusminus(Math.random() * 40 + 20) * ____fontSize / 16,
+          y: -z,
+          rot: 0
+        });
+        _card4.animateTo({
+          delay: 200 + delay,
+          duration: 200,
+
+          x: -z,
+          y: -z,
+          rot: 0,
+
+          onStart: function onStart() {
+            $el.style.zIndex = i;
+          },
+
+          onComplete: function onComplete() {
+            cb(i);
+          }
+        });
+      };
+    }
+  };
+
   var __fontSize;
 
   var poker = {
-    deck: function deck(_deck4) {
-      _deck4.poker = _deck4.queued(poker);
+    deck: function deck(_deck5) {
+      _deck5.poker = _deck5.queued(poker);
 
       function poker(next) {
-        var cards = _deck4.cards;
+        var cards = _deck5.cards;
         var len = cards.length;
 
         __fontSize = fontSize();
@@ -633,13 +705,13 @@ var Deck = (function () {
         });
       }
     },
-    card: function card(_card4) {
-      var $el = _card4.$el;
+    card: function card(_card5) {
+      var $el = _card5.$el;
 
-      _card4.poker = function (i, len, cb) {
+      _card5.poker = function (i, len, cb) {
         var delay = i * 250;
 
-        _card4.animateTo({
+        _card5.animateTo({
           delay: delay,
           duration: 250,
 
@@ -659,11 +731,11 @@ var Deck = (function () {
   };
 
   var intro = {
-    deck: function deck(_deck5) {
-      _deck5.intro = _deck5.queued(intro);
+    deck: function deck(_deck6) {
+      _deck6.intro = _deck6.queued(intro);
 
       function intro(next) {
-        var cards = _deck5.cards;
+        var cards = _deck6.cards;
 
         cards.forEach(function (card, i) {
           card.setSide('front');
@@ -678,23 +750,23 @@ var Deck = (function () {
         });
       }
     },
-    card: function card(_card5) {
+    card: function card(_card6) {
       var transform = prefix('transform');
 
-      var $el = _card5.$el;
+      var $el = _card6.$el;
 
-      _card5.intro = function (i, cb) {
+      _card6.intro = function (i, cb) {
         var delay = 500 + i * 10;
         var z = i / 4;
 
         $el.style[transform] = translate(-z + 'px', '-250px');
         $el.style.opacity = 0;
 
-        _card5.x = -z;
-        _card5.y = -250 - z;
-        _card5.rot = 0;
+        _card6.x = -z;
+        _card6.y = -250 - z;
+        _card6.rot = 0;
 
-        _card5.animateTo({
+        _card6.animateTo({
           delay: delay,
           duration: 1000,
 
@@ -719,11 +791,11 @@ var Deck = (function () {
   var _fontSize;
 
   var fan = {
-    deck: function deck(_deck6) {
-      _deck6.fan = _deck6.queued(fan);
+    deck: function deck(_deck7) {
+      _deck7.fan = _deck7.queued(fan);
 
       function fan(next) {
-        var cards = _deck6.cards;
+        var cards = _deck7.cards;
         var len = cards.length;
 
         _fontSize = fontSize();
@@ -737,15 +809,15 @@ var Deck = (function () {
         });
       }
     },
-    card: function card(_card6) {
-      var $el = _card6.$el;
+    card: function card(_card7) {
+      var $el = _card7.$el;
 
-      _card6.fan = function (i, len, cb) {
+      _card7.fan = function (i, len, cb) {
         var z = i / 4;
         var delay = i * 10;
         var rot = i / (len - 1) * 260 - 130;
 
-        _card6.animateTo({
+        _card7.animateTo({
           delay: delay,
           duration: 300,
 
@@ -753,7 +825,7 @@ var Deck = (function () {
           y: -z,
           rot: 0
         });
-        _card6.animateTo({
+        _card7.animateTo({
           delay: 300 + delay,
           duration: 300,
 
@@ -780,11 +852,11 @@ var Deck = (function () {
   var ___fontSize;
 
   var bysuit = {
-    deck: function deck(_deck7) {
-      _deck7.bysuit = _deck7.queued(bysuit);
+    deck: function deck(_deck8) {
+      _deck8.bysuit = _deck8.queued(bysuit);
 
       function bysuit(next) {
-        var cards = _deck7.cards;
+        var cards = _deck8.cards;
 
         ___fontSize = fontSize();
 
@@ -797,15 +869,15 @@ var Deck = (function () {
         });
       }
     },
-    card: function card(_card7) {
-      var rank = _card7.rank;
-      var suit = _card7.suit;
+    card: function card(_card8) {
+      var rank = _card8.rank;
+      var suit = _card8.suit;
 
-      _card7.bysuit = function (cb) {
-        var i = _card7.i;
+      _card8.bysuit = function (cb) {
+        var i = _card8.i;
         var delay = i * 10;
 
-        _card7.animateTo({
+        _card8.animateTo({
           delay: delay,
           duration: 400,
 
@@ -971,7 +1043,7 @@ var Deck = (function () {
   }
   Deck.animationFrames = animationFrames;
   Deck.ease = ease;
-  Deck.modules = { bysuit: bysuit, fan: fan, intro: intro, poker: poker, shuffle: shuffle, sort: sort, flip: flip };
+  Deck.modules = { bysuit: bysuit, fan: fan, intro: intro, poker: poker, shuffle: shuffle, shuffleTo: shuffleTo, sort: sort, flip: flip };
   Deck.Card = _card;
   Deck.prefix = prefix;
   Deck.translate = translate;
