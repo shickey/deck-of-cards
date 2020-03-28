@@ -1081,7 +1081,8 @@ var Deck = (function () {
               card.setSide(Card.Side.FRONT);
               cards.forEach(function (card) {
                 card.$el.onclick = clickFunction;
-                card.$el.classList.remove('glow');
+                card.$el.classList.remove('glow'); // To keep them all in sync
+                card.$el.classList.add('glow');
               });
             } else {
               cards.forEach(function (card) {
