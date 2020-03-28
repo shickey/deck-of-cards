@@ -888,77 +888,7 @@ var Deck = (function () {
     }
   };
 
-  function observable(target) {
-    target || (target = {});
-    var listeners = {};
-
-    target.on = on;
-    target.one = one;
-    target.off = off;
-    target.trigger = trigger;
-
-    return target;
-
-    function on(name, cb, ctx) {
-      listeners[name] || (listeners[name] = []);
-      listeners[name].push({ cb: cb, ctx: ctx });
-    }
-
-    function one(name, cb, ctx) {
-      listeners[name] || (listeners[name] = []);
-      listeners[name].push({
-        cb: cb, ctx: ctx, once: true
-      });
-    }
-
-    function trigger(name) {
-      var self = this;
-      var args = Array.prototype.slice(arguments, 1);
-
-      var currentListeners = listeners[name] || [];
-
-      currentListeners.filter(function (listener) {
-        listener.cb.apply(self, args);
-
-        return !listener.once;
-      });
-    }
-
-    function off(name, cb) {
-      if (!name) {
-        listeners = {};
-        return;
-      }
-
-      if (!cb) {
-        listeners[name] = [];
-        return;
-      }
-
-      listeners[name] = listeners[name].filter(function (listener) {
-        return listener.cb !== cb;
-      });
-    }
-  }
-
-  function Clique(deck, cards) {
-
-    var self = observable({ deck: deck, cards: cards, queued: deck.queued });
-
-    // Add all the deck modules to the clique
-    var modules = Deck.modules;
-    for (var module in modules) {
-      addModule(modules[module]);
-    }
-
-    return self;
-
-    function addModule(module) {
-      module.deck && module.deck(self);
-    }
-  }
-
-  function DrawPile(deck, cards, params) {
+  function Pile(deck, cards, params) {
     var x = params.x;
     var y = params.y;
 
@@ -1104,7 +1034,77 @@ var Deck = (function () {
     return self;
   }
 
-  Clique.DrawPile = DrawPile;
+  function observable(target) {
+    target || (target = {});
+    var listeners = {};
+
+    target.on = on;
+    target.one = one;
+    target.off = off;
+    target.trigger = trigger;
+
+    return target;
+
+    function on(name, cb, ctx) {
+      listeners[name] || (listeners[name] = []);
+      listeners[name].push({ cb: cb, ctx: ctx });
+    }
+
+    function one(name, cb, ctx) {
+      listeners[name] || (listeners[name] = []);
+      listeners[name].push({
+        cb: cb, ctx: ctx, once: true
+      });
+    }
+
+    function trigger(name) {
+      var self = this;
+      var args = Array.prototype.slice(arguments, 1);
+
+      var currentListeners = listeners[name] || [];
+
+      currentListeners.filter(function (listener) {
+        listener.cb.apply(self, args);
+
+        return !listener.once;
+      });
+    }
+
+    function off(name, cb) {
+      if (!name) {
+        listeners = {};
+        return;
+      }
+
+      if (!cb) {
+        listeners[name] = [];
+        return;
+      }
+
+      listeners[name] = listeners[name].filter(function (listener) {
+        return listener.cb !== cb;
+      });
+    }
+  }
+
+  function Clique(deck, cards) {
+
+    var self = observable({ deck: deck, cards: cards, queued: deck.queued });
+
+    // Add all the deck modules to the clique
+    var modules = Deck.modules;
+    for (var module in modules) {
+      addModule(modules[module]);
+    }
+
+    return self;
+
+    function addModule(module) {
+      module.deck && module.deck(self);
+    }
+  }
+
+  Clique.Pile = Pile;
   Clique.Hand = Hand;
 
   function queue(target) {
