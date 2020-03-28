@@ -901,10 +901,16 @@ var Deck = (function () {
     return 88 / 16 * fontSize();
   }
 
+  var nextId = 1;
+  function generateNextCliqueId() {
+    return (nextId++ * 1679973079 % Math.pow(36, 6)).toString(36);
+  }
+
   var util = {
     fisherYates: fisherYates,
     getCardWidth: getCardWidth,
-    getCardHeight: getCardHeight
+    getCardHeight: getCardHeight,
+    generateNextCliqueId: generateNextCliqueId
   };
 
   function Pile(deck, cards, params) {
@@ -1158,15 +1164,41 @@ var Deck = (function () {
     }
   }
 
-  function Clique(deck, cards) {
+  function Clique(deck, cards, params) {
+    var id = params && params.id || util.generateNextCliqueId();
 
-    var self = observable({ deck: deck, cards: cards, queued: deck.queued });
+    var self = observable({ id: id, deck: deck, cards: cards, queued: deck.queued });
 
     // Add all the deck modules to the clique
     var modules = Deck.modules;
     for (var module in modules) {
       addModule(modules[module]);
     }
+
+    self.serialize = function () {
+      return {
+        id: self.id,
+        cardIds: self.cards.map(function (card) {
+          return card.i;
+        })
+      };
+    };
+
+    self.gatherCards = function (cardIds) {
+      var newCards = [];
+      cardIds.forEach(function (id) {
+        newCards.push(self.deck.cards.find(function (c) {
+          return id == c.i;
+        }));
+      });
+      self.cards = newCards;
+      if (typeof self.layout === "function") {
+        self.layout();
+      }
+    };
+
+    // Register clique with its deck
+    deck.cliques[self.id] = self;
 
     return self;
 
@@ -1228,9 +1260,10 @@ var Deck = (function () {
   function Deck(jokers) {
     // init cards array
     var cards = new Array(jokers ? 55 : 52);
+    var cliques = {};
 
     var $el = createElement('div');
-    var self = observable({ mount: mount, unmount: unmount, cards: cards, $el: $el });
+    var self = observable({ mount: mount, unmount: unmount, cards: cards, cliques: cliques, $el: $el, serialize: serialize });
     var $root;
 
     var modules = Deck.modules;
@@ -1271,6 +1304,14 @@ var Deck = (function () {
 
     function addModule(module) {
       module.deck && module.deck(self);
+    }
+
+    function serialize() {
+      var serialized = {};
+      for (var cliqueId in self.cliques) {
+        serialized[cliqueId] = self.cliques[cliqueId].serialize();
+      }
+      return serialized;
     }
   }
   Deck.animationFrames = animationFrames;
