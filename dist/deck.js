@@ -1056,14 +1056,13 @@ var Deck = (function () {
       card.$el.onclick = null; // No clicking!
     });
 
-    var cardWidth = 62 / 16 * fontSize();
-    var spacing = cardWidth / 10;
-
     self.layout = function () {
       if (self.cards.length === 0) {
         return;
       }
       var cardsToAnimate = self.cards.slice();
+      var cardWidth = 62 / 16 * fontSize();
+      var spacing = cardWidth / 10;
       self.queued(function (next) {
 
         // The "total width" is slightly weird here because we're actually calculating
