@@ -966,6 +966,9 @@ var Deck = (function () {
     };
 
     self.prepareForDraw = function (cb) {
+      if (self.cards.length == 0) {
+        return false;
+      }
       self.queued(function (next) {
         if (cb) {
           self.canDraw = true;
@@ -980,6 +983,7 @@ var Deck = (function () {
         }
         next();
       })();
+      return true;
     };
 
     self.addCard = function (card) {
@@ -1059,6 +1063,40 @@ var Deck = (function () {
     self.addCard = function (card) {
       self.cards.push(card);
       self.layout();
+    };
+
+    self.peek = function (num, handler) {
+      var totalClicks = 0;
+      var cards = self.cards.slice();
+      self.queued(function (next) {
+        cards.forEach(function (card) {
+          card.$el.classList.add('glow');
+          var clickFunction = function clickFunction() {
+            totalClicks++;
+            if (totalClicks < num) {
+              card.setSide(Card.Side.FRONT);
+              card.$el.onclick = null;
+              card.$el.classList.remove('glow');
+            } else if (totalClicks == num) {
+              card.setSide(Card.Side.FRONT);
+              cards.forEach(function (card) {
+                card.$el.onclick = clickFunction;
+                card.$el.classList.remove('glow');
+              });
+            } else {
+              cards.forEach(function (card) {
+                card.setSide(Card.Side.BACK);
+                card.$el.onclick = null;
+                if (handler) {
+                  handler();
+                }
+              });
+            }
+          };
+          card.$el.onclick = clickFunction;
+        });
+        next();
+      })();
     };
 
     self.layout();
