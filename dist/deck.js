@@ -992,11 +992,6 @@ var Deck = (function () {
       return true;
     };
 
-    self.addCard = function (card) {
-      self.cards.push(card);
-      self.layout();
-    };
-
     self.layout();
 
     return self;
@@ -1066,11 +1061,6 @@ var Deck = (function () {
       })();
     };
 
-    self.addCard = function (card) {
-      self.cards.push(card);
-      self.layout();
-    };
-
     self.peek = function (num, handler) {
       var totalClicks = 0;
       var cards = self.cards.slice();
@@ -1088,7 +1078,9 @@ var Deck = (function () {
               cards.forEach(function (card) {
                 card.$el.onclick = clickFunction;
                 card.$el.classList.remove('glow'); // To keep them all in sync
-                card.$el.classList.add('glow');
+                setTimeout(function () {
+                  card.$el.classList.add('glow');
+                }, 0);
               });
             } else {
               cards.forEach(function (card) {
@@ -1192,6 +1184,13 @@ var Deck = (function () {
         }));
       });
       self.cards = newCards;
+      if (typeof self.layout === "function") {
+        self.layout();
+      }
+    };
+
+    self.addCard = function (card) {
+      self.cards.push(card);
       if (typeof self.layout === "function") {
         self.layout();
       }
