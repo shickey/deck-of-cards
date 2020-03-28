@@ -151,8 +151,6 @@ var Deck = (function () {
     return document.createElement(type);
   }
 
-  var maxZ = 52;
-
   function _card(i) {
     var transform = prefix('transform');
 
@@ -167,8 +165,8 @@ var Deck = (function () {
     var $back = createElement('div');
 
     // states
-    var isDraggable = false;
-    var isFlippable = false;
+    // var isDraggable = false
+    // var isFlippable = false
 
     // self = card
     var self = { i: i, rank: rank, suit: suit, pos: i, $el: $el, mount: mount, unmount: unmount, setSide: setSide };
@@ -193,8 +191,8 @@ var Deck = (function () {
     self.setSide('back');
 
     // add drag/click listeners
-    addListener($el, 'mousedown', onMousedown);
-    addListener($el, 'touchstart', onMousedown);
+    // addListener($el, 'mousedown', onMousedown)
+    // addListener($el, 'touchstart', onMousedown)
 
     // load modules
     for (module in modules) {
@@ -215,6 +213,8 @@ var Deck = (function () {
       var onProgress = params.onProgress;
       var onComplete = params.onComplete;
 
+      delay = delay || 0;
+      duration = duration || 500;
       var startX, startY, startRot;
       var diffX, diffY, diffRot;
 
@@ -236,7 +236,7 @@ var Deck = (function () {
         self.y = startY + diffY * et;
         self.rot = startRot + diffRot * et;
 
-        $el.style[transform] = translate(self.x + 'px', self.y + 'px') + (diffRot ? 'rotate(' + self.rot + 'deg)' : '');
+        $el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
       }).end(function () {
         onComplete && onComplete();
       });
@@ -250,40 +250,40 @@ var Deck = (function () {
 
     self.setRankSuit(rank, suit);
 
-    self.enableDragging = function () {
-      // this activates dragging
-      if (isDraggable) {
-        // already is draggable, do nothing
-        return;
-      }
-      isDraggable = true;
-      $el.style.cursor = 'move';
-    };
+    // self.enableDragging = function () {
+    //   // this activates dragging
+    //   if (isDraggable) {
+    //     // already is draggable, do nothing
+    //     return
+    //   }
+    //   isDraggable = true
+    //   $el.style.cursor = 'move'
+    // }
 
-    self.enableFlipping = function () {
-      if (isFlippable) {
-        // already is flippable, do nothing
-        return;
-      }
-      isFlippable = true;
-    };
+    // self.enableFlipping = function () {
+    //   if (isFlippable) {
+    //     // already is flippable, do nothing
+    //     return
+    //   }
+    //   isFlippable = true
+    // }
 
-    self.disableFlipping = function () {
-      if (!isFlippable) {
-        // already disabled flipping, do nothing
-        return;
-      }
-      isFlippable = false;
-    };
+    // self.disableFlipping = function () {
+    //   if (!isFlippable) {
+    //     // already disabled flipping, do nothing
+    //     return
+    //   }
+    //   isFlippable = false
+    // }
 
-    self.disableDragging = function () {
-      if (!isDraggable) {
-        // already disabled dragging, do nothing
-        return;
-      }
-      isDraggable = false;
-      $el.style.cursor = '';
-    };
+    // self.disableDragging = function () {
+    //   if (!isDraggable) {
+    //     // already disabled dragging, do nothing
+    //     return
+    //   }
+    //   isDraggable = false
+    //   $el.style.cursor = ''
+    // }
 
     return self;
 
@@ -292,74 +292,74 @@ var Deck = (function () {
       module.card && module.card(self);
     }
 
-    function onMousedown(e) {
-      var startPos = {};
-      var pos = {};
-      var starttime = Date.now();
+    // function onMousedown (e) {
+    //   var startPos = {}
+    //   var pos = {}
+    //   var starttime = Date.now()
 
-      e.preventDefault();
+    //   e.preventDefault()
 
-      // get start coordinates and start listening window events
-      if (e.type === 'mousedown') {
-        startPos.x = pos.x = e.clientX;
-        startPos.y = pos.y = e.clientY;
-        addListener(window, 'mousemove', onMousemove);
-        addListener(window, 'mouseup', onMouseup);
-      } else {
-        startPos.x = pos.x = e.touches[0].clientX;
-        startPos.y = pos.y = e.touches[0].clientY;
-        addListener(window, 'touchmove', onMousemove);
-        addListener(window, 'touchend', onMouseup);
-      }
+    //   // get start coordinates and start listening window events
+    //   if (e.type === 'mousedown') {
+    //     startPos.x = pos.x = e.clientX
+    //     startPos.y = pos.y = e.clientY
+    //     addListener(window, 'mousemove', onMousemove)
+    //     addListener(window, 'mouseup', onMouseup)
+    //   } else {
+    //     startPos.x = pos.x = e.touches[0].clientX
+    //     startPos.y = pos.y = e.touches[0].clientY
+    //     addListener(window, 'touchmove', onMousemove)
+    //     addListener(window, 'touchend', onMouseup)
+    //   }
 
-      if (!isDraggable) {
-        // is not draggable, do nothing
-        return;
-      }
+    //   if (!isDraggable) {
+    //     // is not draggable, do nothing
+    //     return
+    //   }
 
-      // move card
-      $el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '');
-      $el.style.zIndex = maxZ++;
+    //   // move card
+    //   $el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '')
+    //   $el.style.zIndex = maxZ++
 
-      function onMousemove(e) {
-        if (!isDraggable) {
-          // is not draggable, do nothing
-          return;
-        }
-        if (e.type === 'mousemove') {
-          pos.x = e.clientX;
-          pos.y = e.clientY;
-        } else {
-          pos.x = e.touches[0].clientX;
-          pos.y = e.touches[0].clientY;
-        }
+    //   function onMousemove (e) {
+    //     if (!isDraggable) {
+    //       // is not draggable, do nothing
+    //       return
+    //     }
+    //     if (e.type === 'mousemove') {
+    //       pos.x = e.clientX
+    //       pos.y = e.clientY
+    //     } else {
+    //       pos.x = e.touches[0].clientX
+    //       pos.y = e.touches[0].clientY
+    //     }
 
-        // move card
-        $el.style[transform] = translate(Math.round(self.x + pos.x - startPos.x) + 'px', Math.round(self.y + pos.y - startPos.y) + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '');
-      }
+    //     // move card
+    //     $el.style[transform] = translate(Math.round(self.x + pos.x - startPos.x) + 'px', Math.round(self.y + pos.y - startPos.y) + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '')
+    //   }
 
-      function onMouseup(e) {
-        if (isFlippable && Date.now() - starttime < 200) {
-          // flip sides
-          self.setSide(self.side === 'front' ? 'back' : 'front');
-        }
-        if (e.type === 'mouseup') {
-          removeListener(window, 'mousemove', onMousemove);
-          removeListener(window, 'mouseup', onMouseup);
-        } else {
-          removeListener(window, 'touchmove', onMousemove);
-          removeListener(window, 'touchend', onMouseup);
-        }
-        if (!isDraggable) {
-          // is not draggable, do nothing
-          return;
-        }
+    //   function onMouseup (e) {
+    //     if (isFlippable && Date.now() - starttime < 200) {
+    //       // flip sides
+    //       self.setSide(self.side === 'front' ? 'back' : 'front')
+    //     }
+    //     if (e.type === 'mouseup') {
+    //       removeListener(window, 'mousemove', onMousemove)
+    //       removeListener(window, 'mouseup', onMouseup)
+    //     } else {
+    //       removeListener(window, 'touchmove', onMousemove)
+    //       removeListener(window, 'touchend', onMouseup)
+    //     }
+    //     if (!isDraggable) {
+    //       // is not draggable, do nothing
+    //       return
+    //     }
 
-        // set current position
-        self.x = self.x + pos.x - startPos.x;
-        self.y = self.y + pos.y - startPos.y;
-      }
-    }
+    //     // set current position
+    //     self.x = self.x + pos.x - startPos.x
+    //     self.y = self.y + pos.y - startPos.y
+    //   }
+    // }
 
     function mount(target) {
       // mount card to target (deck)
@@ -397,14 +397,6 @@ var Deck = (function () {
   function SuitName(suit) {
     // return suit name from suit value
     return suit === 0 ? 'spades' : suit === 1 ? 'hearts' : suit === 2 ? 'clubs' : suit === 3 ? 'diamonds' : 'joker';
-  }
-
-  function addListener(target, name, listener) {
-    target.addEventListener(name, listener);
-  }
-
-  function removeListener(target, name, listener) {
-    target.removeEventListener(name, listener);
   }
 
   var ease = {
@@ -543,9 +535,9 @@ var Deck = (function () {
 
   var shuffleTo = {
     deck: function deck(_deck3) {
-      _deck3.shuffleTo = _deck3.queued(shuffleTo);
+      _deck3.shuffleTo = shuffleTo;
 
-      function shuffleTo(next, params) {
+      function shuffleTo(params) {
         var cards = _deck3.cards;
         var order = params.order;
 
@@ -556,17 +548,20 @@ var Deck = (function () {
           });
         });
 
-        _deck3.cards = newCards;
+        _deck3.cards = newCards.slice();
 
-        _deck3.cards.forEach(function (card, i) {
-          card.pos = i;
+        _deck3.queued(function (next) {
 
-          card.shuffleTo(function (i) {
-            if (i === _deck3.cards.length - 1) {
-              next();
-            }
+          newCards.forEach(function (card, i) {
+            card.pos = i;
+
+            card.shuffleTo(function (i) {
+              if (i === newCards.length - 1) {
+                next();
+              }
+            });
           });
-        });
+        })();
         return;
       }
     },
@@ -738,7 +733,7 @@ var Deck = (function () {
         var cards = _deck6.cards;
 
         cards.forEach(function (card, i) {
-          card.setSide('front');
+          card.setSide('back');
           card.intro(i, function (i) {
             animationFrames(250, 0).start(function () {
               card.setSide('back');
@@ -893,53 +888,6 @@ var Deck = (function () {
     }
   };
 
-  function queue(target) {
-    var array = Array.prototype;
-
-    var queueing = [];
-
-    target.queue = queue;
-    target.queued = queued;
-
-    return target;
-
-    function queued(action) {
-      return function () {
-        var self = this;
-        var args = arguments;
-
-        queue(function (next) {
-          action.apply(self, array.concat.apply(next, args));
-        });
-      };
-    }
-
-    function queue(action) {
-      if (!action) {
-        return;
-      }
-
-      queueing.push(action);
-
-      if (queueing.length === 1) {
-        next();
-      }
-    }
-    function next() {
-      queueing[0](function (err) {
-        if (err) {
-          throw err;
-        }
-
-        queueing = queueing.slice(1);
-
-        if (queueing.length) {
-          next();
-        }
-      });
-    }
-  }
-
   function observable(target) {
     target || (target = {});
     var listeners = {};
@@ -989,6 +937,220 @@ var Deck = (function () {
 
       listeners[name] = listeners[name].filter(function (listener) {
         return listener.cb !== cb;
+      });
+    }
+  }
+
+  function Clique(deck, cards) {
+
+    var self = observable({ deck: deck, cards: cards, queued: deck.queued });
+
+    // Add all the deck modules to the clique
+    var modules = Deck.modules;
+    for (var module in modules) {
+      addModule(modules[module]);
+    }
+
+    return self;
+
+    function addModule(module) {
+      module.deck && module.deck(self);
+    }
+  }
+
+  function DrawPile(deck, cards, params) {
+    var x = params.x;
+    var y = params.y;
+
+    x = x || 0;
+    y = y || 0;
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, canDraw: false });
+
+    cards.forEach(function (card) {
+      card.$el.onclick = null; // No clicking!
+    });
+
+    self.setup = function (pos) {
+      self.queued(function (next) {
+        self.cards.forEach(function (card, i) {
+          var z = i / 4;
+          card.setSide('back');
+          card.$el.style.zIndex = i;
+          card.animateTo({
+            delay: 0,
+            duration: 200,
+
+            x: self.x - z,
+            y: self.y - z,
+            rot: 0,
+
+            onComplete: function onComplete() {
+              if (i === self.cards.length - 1) {
+                next();
+              }
+            }
+          });
+        });
+      })();
+    };
+
+    self.draw = function (num) {
+      if (typeof num === "undefined") {
+        num = 1;
+      }
+      if (num == 1) {
+        return self.cards.pop();
+      }
+      var drawnCards = [];
+      for (var i = 0; i < num; ++i) {
+        drawnCards.push(self.cards.pop());
+      }
+      return drawnCards;
+    };
+
+    self.prepareForDraw = function (cb) {
+      self.queued(function (next) {
+        if (cb) {
+          self.canDraw = true;
+          var topCard = self.cards[self.cards.length - 1];
+          topCard.$el.classList.add('glow');
+          topCard.$el.onclick = setupDrawClickHandler(cb);
+        } else {
+          self.canDraw = false;
+          var topCard = self.cards[self.cards.length - 1];
+          topCard.$el.classList.remove('glow');
+          topCard.$el.onclick = null;
+        }
+        next();
+      })();
+    };
+
+    self.setup();
+
+    return self;
+
+    function setupDrawClickHandler(cb) {
+      return function () {
+        var card = self.cards.pop();
+        card.$el.classList.remove('glow');
+        card.$el.onclick = null;
+        self.canDraw = false;
+        if (cb) {
+          cb(card);
+        }
+      };
+    }
+  }
+
+  function Hand(deck, cards, params) {
+    var x = params.x;
+    var y = params.y;
+    var rot = params.rot;
+
+    x = x || 0;
+    y = y || 0;
+    rot = rot || 0;
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot });
+
+    self.cards.forEach(function (card) {
+      card.$el.onclick = null; // No clicking!
+    });
+
+    var cardWidth = 62 / 16 * fontSize();
+    var spacing = cardWidth / 10;
+
+    self.layout = function () {
+      if (self.cards.length === 0) {
+        return;
+      }
+      var cardsToAnimate = self.cards.slice();
+      self.queued(function (next) {
+
+        // The "total width" is slightly weird here because we're actually calculating
+        // the distance between the *centers* of the first and last cards.
+        // I.e., we don't need to account for the left half of the first card
+        // and the right half of the last card, so we subtract a whole card
+        // from the `(cardWidth * cards.length)` calculation.
+        var totalWidth = cardWidth * (cardsToAnimate.length - 1) + spacing * (cardsToAnimate.length - 1);
+
+        var startX = -(totalWidth / 2);
+
+        cardsToAnimate.forEach(function (card, i) {
+          var cardX = startX + (cardWidth + spacing) * i;
+          var rads = self.rot * Math.PI / 180;
+          var rotatedX = cardX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
+          var rotatedY = cardX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+          card.animateTo({
+            duration: 200,
+            x: self.x + rotatedX,
+            y: self.y + rotatedY,
+            rot: self.rot,
+            onComplete: function onComplete() {
+              if (i === cardsToAnimate.length - 1) {
+                next();
+              }
+            }
+          });
+        });
+      })();
+    };
+
+    self.addCard = function (card) {
+      self.cards.push(card);
+      self.layout();
+    };
+
+    self.layout();
+
+    return self;
+  }
+
+  Clique.DrawPile = DrawPile;
+  Clique.Hand = Hand;
+
+  function queue(target) {
+    var array = Array.prototype;
+
+    var queueing = [];
+
+    target.queue = queue;
+    target.queued = queued;
+
+    return target;
+
+    function queued(action) {
+      return function () {
+        var self = this;
+        var args = arguments;
+
+        queue(function (next) {
+          action.apply(self, array.concat.apply(next, args));
+        });
+      };
+    }
+
+    function queue(action) {
+      if (!action) {
+        return;
+      }
+
+      queueing.push(action);
+
+      if (queueing.length === 1) {
+        next();
+      }
+    }
+    function next() {
+      queueing[0](function (err) {
+        if (err) {
+          throw err;
+        }
+
+        queueing = queueing.slice(1);
+
+        if (queueing.length) {
+          next();
+        }
       });
     }
   }
@@ -1048,6 +1210,7 @@ var Deck = (function () {
   Deck.prefix = prefix;
   Deck.translate = translate;
   Deck.util = { fisherYates: fisherYates };
+  Deck.Clique = Clique;
 
   return Deck;
 })();
