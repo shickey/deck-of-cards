@@ -901,16 +901,10 @@ var Deck = (function () {
     return 88 / 16 * fontSize();
   }
 
-  var nextId = 1;
-  function generateNextCliqueId() {
-    return (nextId++ * 1679973079 % Math.pow(36, 6)).toString(36);
-  }
-
   var util = {
     fisherYates: fisherYates,
     getCardWidth: getCardWidth,
-    getCardHeight: getCardHeight,
-    generateNextCliqueId: generateNextCliqueId
+    getCardHeight: getCardHeight
   };
 
   function Pile(deck, cards, params) {
@@ -1157,7 +1151,7 @@ var Deck = (function () {
   }
 
   function Clique(deck, cards, params) {
-    var id = params && params.id || util.generateNextCliqueId();
+    var id = params && params.id || deck.generateNextCliqueId();
 
     var self = observable({ id: id, deck: deck, cards: cards, queued: deck.queued });
 
@@ -1262,7 +1256,7 @@ var Deck = (function () {
     var cliques = {};
 
     var $el = createElement('div');
-    var self = observable({ mount: mount, unmount: unmount, cards: cards, cliques: cliques, $el: $el, serialize: serialize });
+    var self = observable({ mount: mount, unmount: unmount, cards: cards, cliques: cliques, $el: $el, serialize: serialize, generateNextCliqueId: generateNextCliqueId });
     var $root;
 
     var modules = Deck.modules;
@@ -1286,6 +1280,12 @@ var Deck = (function () {
       card = cards[i - 1] = Card(i - 1);
       card.setSide('back');
       card.mount($el);
+    }
+
+    // Clique Ids
+    var nextCliqueId = 1;
+    function generateNextCliqueId() {
+      return (nextCliqueId++ * 1679973079 % Math.pow(36, 6)).toString(36);
     }
 
     return self;
