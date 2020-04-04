@@ -653,10 +653,6 @@ var Deck = (function () {
     var $face = createElement('div');
     var $back = createElement('div');
 
-    // states
-    // var isDraggable = false
-    // var isFlippable = false
-
     // self = card
     var self = { i: i, rank: rank, suit: suit, pos: i, $el: $el, mount: mount, unmount: unmount, setSide: setSide };
 
@@ -678,10 +674,6 @@ var Deck = (function () {
 
     // set default side to back
     self.setSide(Card.Side.BACK);
-
-    // add drag/click listeners
-    // addListener($el, 'mousedown', onMousedown)
-    // addListener($el, 'touchstart', onMousedown)
 
     // load modules
     for (module in modules) {
@@ -731,6 +723,14 @@ var Deck = (function () {
       });
     };
 
+    self.setGlow = function (enable) {
+      if (enable) {
+        self.$el.classList.add('glow');
+      } else {
+        self.$el.classList.remove('glow');
+      }
+    };
+
     // set rank & suit
     self.setRankSuit = function (rank, suit) {
       var suitName = SuitName(suit);
@@ -739,116 +739,12 @@ var Deck = (function () {
 
     self.setRankSuit(rank, suit);
 
-    // self.enableDragging = function () {
-    //   // this activates dragging
-    //   if (isDraggable) {
-    //     // already is draggable, do nothing
-    //     return
-    //   }
-    //   isDraggable = true
-    //   $el.style.cursor = 'move'
-    // }
-
-    // self.enableFlipping = function () {
-    //   if (isFlippable) {
-    //     // already is flippable, do nothing
-    //     return
-    //   }
-    //   isFlippable = true
-    // }
-
-    // self.disableFlipping = function () {
-    //   if (!isFlippable) {
-    //     // already disabled flipping, do nothing
-    //     return
-    //   }
-    //   isFlippable = false
-    // }
-
-    // self.disableDragging = function () {
-    //   if (!isDraggable) {
-    //     // already disabled dragging, do nothing
-    //     return
-    //   }
-    //   isDraggable = false
-    //   $el.style.cursor = ''
-    // }
-
     return self;
 
     function addModule(module) {
       // add card module
       module.card && module.card(self);
     }
-
-    // function onMousedown (e) {
-    //   var startPos = {}
-    //   var pos = {}
-    //   var starttime = Date.now()
-
-    //   e.preventDefault()
-
-    //   // get start coordinates and start listening window events
-    //   if (e.type === 'mousedown') {
-    //     startPos.x = pos.x = e.clientX
-    //     startPos.y = pos.y = e.clientY
-    //     addListener(window, 'mousemove', onMousemove)
-    //     addListener(window, 'mouseup', onMouseup)
-    //   } else {
-    //     startPos.x = pos.x = e.touches[0].clientX
-    //     startPos.y = pos.y = e.touches[0].clientY
-    //     addListener(window, 'touchmove', onMousemove)
-    //     addListener(window, 'touchend', onMouseup)
-    //   }
-
-    //   if (!isDraggable) {
-    //     // is not draggable, do nothing
-    //     return
-    //   }
-
-    //   // move card
-    //   $el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '')
-    //   $el.style.zIndex = maxZ++
-
-    //   function onMousemove (e) {
-    //     if (!isDraggable) {
-    //       // is not draggable, do nothing
-    //       return
-    //     }
-    //     if (e.type === 'mousemove') {
-    //       pos.x = e.clientX
-    //       pos.y = e.clientY
-    //     } else {
-    //       pos.x = e.touches[0].clientX
-    //       pos.y = e.touches[0].clientY
-    //     }
-
-    //     // move card
-    //     $el.style[transform] = translate(Math.round(self.x + pos.x - startPos.x) + 'px', Math.round(self.y + pos.y - startPos.y) + 'px') + (self.rot ? ' rotate(' + self.rot + 'deg)' : '')
-    //   }
-
-    //   function onMouseup (e) {
-    //     if (isFlippable && Date.now() - starttime < 200) {
-    //       // flip sides
-    //       self.setSide(self.side === 'front' ? 'back' : 'front')
-    //     }
-    //     if (e.type === 'mouseup') {
-    //       removeListener(window, 'mousemove', onMousemove)
-    //       removeListener(window, 'mouseup', onMouseup)
-    //     } else {
-    //       removeListener(window, 'touchmove', onMousemove)
-    //       removeListener(window, 'touchend', onMouseup)
-    //     }
-    //     if (!isDraggable) {
-    //       // is not draggable, do nothing
-    //       return
-    //     }
-
-    //     // set current position
-    //     self.x = self.x + pos.x - startPos.x
-    //     self.y = self.y + pos.y - startPos.y
-    //   }
-    // }
 
     function mount(target) {
       // mount card to target (deck)
@@ -917,7 +813,22 @@ var Deck = (function () {
     y = y || 0;
     rot = rot || 0;
     side = side || Card.Side.BACK;
-    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, canDraw: false });
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, $root: deck.$root, selectionEnabled: false });
+
+    var dummyCard = { $el: createElement('div') };
+    var dummyCardEl = dummyCard.$el;
+    var transform = prefix('transform');
+    dummyCardEl.classList.add('card');
+    dummyCardEl.style[transform] = translate(self.x + 'px', self.y + 'px');
+    dummyCardEl.style.zIndex = -1;
+    dummyCard.setGlow = function (enable) {
+      if (enable) {
+        this.$el.classList.add('glow');
+      } else {
+        this.$el.classList.remove('glow');
+      }
+    };
+    self.$root.appendChild(dummyCardEl);
 
     cards.forEach(function (card) {
       card.$el.onclick = null; // No clicking!
@@ -951,67 +862,92 @@ var Deck = (function () {
       })();
     };
 
-    self.draw = function (num) {
+    self.popCard = function (num) {
+      if (self.selectionEnabled) {
+        setTopCardSelectable(false);
+      }
       if (typeof num === "undefined") {
         num = 1;
       }
       if (num == 1) {
         return self.cards.pop();
       }
+      if (num <= 0) {
+        return [];
+      }
       var drawnCards = [];
       for (var i = 0; i < num; ++i) {
         drawnCards.push(self.cards.pop());
       }
+
+      if (self.selectionEnabled && self.cards.length > 0) {
+        setTopCardSelectable(true);
+      }
+
       return drawnCards;
     };
 
-    self.prepareForDraw = function (cb) {
-      if (self.cards.length == 0) {
-        return false;
+    self.pushCard = function (card, options) {
+      if (self.selectionEnabled) {
+        setTopCardSelectable(false);
       }
+
+      if (options && options.side) {
+        card.setSide(options.side);
+      } else {
+        card.setSide(self.side);
+      }
+      self.cards.push(card);
+
+      if (self.selectionEnabled) {
+        setTopCardSelectable(true);
+      }
+    };
+
+    function setTopCardSelectable(selectable) {
+      var topCard = {};
+      if (self.cards.length === 0) {
+        topCard = dummyCard;
+      } else {
+        topCard = self.cards[self.cards.length - 1];
+      }
+      if (selectable) {
+        topCard.setGlow(true);
+        topCard.$el.onclick = function () {
+          if (typeof self.onSelect === 'function') {
+            self.onSelect();
+          }
+        };
+      } else {
+        topCard.setGlow(false);
+        topCard.$el.onclick = null;
+      }
+    }
+
+    self.enableSelection = function (enable) {
       self.queued(function (next) {
-        if (cb) {
-          self.canDraw = true;
-          var topCard = self.cards[self.cards.length - 1];
-          topCard.$el.classList.add('glow');
-          topCard.$el.onclick = setupDrawClickHandler(cb);
-        } else {
-          self.canDraw = false;
-          var topCard = self.cards[self.cards.length - 1];
-          topCard.$el.classList.remove('glow');
-          topCard.$el.onclick = null;
-        }
+        self.selectionEnabled = enable;
+        setTopCardSelectable(enable);
         next();
       })();
-      return true;
     };
 
     self.layout();
 
     return self;
-
-    function setupDrawClickHandler(cb) {
-      return function () {
-        var card = self.cards.pop();
-        card.$el.classList.remove('glow');
-        card.$el.onclick = null;
-        self.canDraw = false;
-        if (cb) {
-          cb(card);
-        }
-      };
-    }
   }
 
   function Hand(deck, cards, params) {
     var x = params.x;
     var y = params.y;
     var rot = params.rot;
+    var side = params.side;
 
     x = x || 0;
     y = y || 0;
     rot = rot || 0;
-    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot });
+    side = side || Card.Side.BACK;
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side });
 
     self.cards.forEach(function (card) {
       card.$el.onclick = null; // No clicking!
@@ -1055,33 +991,31 @@ var Deck = (function () {
       })();
     };
 
-    self.peek = function (num, handler) {
+    self.peek = function (num) {
       var totalClicks = 0;
       var cards = self.cards.slice();
       self.queued(function (next) {
         cards.forEach(function (card) {
-          card.$el.classList.add('glow');
+          card.setGlow(true);
           var clickFunction = function clickFunction() {
             totalClicks++;
             if (totalClicks < num) {
               card.setSide(Card.Side.FRONT);
               card.$el.onclick = null;
-              card.$el.classList.remove('glow');
+              card.setGlow(false);
             } else if (totalClicks == num) {
               card.setSide(Card.Side.FRONT);
               cards.forEach(function (card) {
                 card.$el.onclick = clickFunction;
-                card.$el.classList.remove('glow'); // To keep them all in sync
-                setTimeout(function () {
-                  card.$el.classList.add('glow');
-                }, 0);
+                card.setGlow(true);
               });
             } else {
               cards.forEach(function (card) {
                 card.setSide(Card.Side.BACK);
+                card.setGlow(false);
                 card.$el.onclick = null;
-                if (handler) {
-                  handler();
+                if (typeof self.onPeek === 'function') {
+                  self.onPeek();
                 }
               });
             }
@@ -1090,6 +1024,60 @@ var Deck = (function () {
         });
         next();
       })();
+    };
+
+    function setCardSelectable(card, selectable) {
+      if (selectable) {
+        card.setGlow(true);
+        card.$el.onclick = function () {
+          if (typeof self.onSelect === 'function') {
+            var cardIdx = self.cards.indexOf(card);
+            self.onSelect(card, cardIdx);
+          }
+        };
+      } else {
+        card.setGlow(false);
+        card.$el.onclick = null;
+      }
+    }
+
+    self.enableSelection = function (enable) {
+      self.queued(function (next) {
+        self.selectionEnabled = enable;
+        self.cards.forEach(function (card) {
+          setCardSelectable(card, enable);
+        });
+        next();
+      })();
+    };
+
+    self.addCard = function (card, options) {
+      if (options && options.side) {
+        card.setSide(options.side);
+      } else {
+        card.setSide(self.side);
+      }
+      self.cards.push(card);
+    };
+
+    self.removeCardAtIndex = function (index) {
+      if (index >= self.cards.length) {
+        return;
+      }
+      var card = self.cards[index];
+      self.cards.splice(index, 1);
+      return card;
+    };
+
+    self.replaceCardAtIndex = function (index, newCard, options) {
+      var replacing = self.cards[index];
+      if (options && options.side) {
+        newCard.setSide(options.side);
+      } else {
+        newCard.setSide(self.side);
+      }
+      self.cards[index] = newCard;
+      return replacing;
     };
 
     self.layout();
@@ -1173,18 +1161,15 @@ var Deck = (function () {
     self.gatherCards = function (cardIds) {
       var newCards = [];
       cardIds.forEach(function (id) {
-        newCards.push(self.deck.cards.find(function (c) {
+        var card = self.deck.cards.find(function (c) {
           return id == c.i;
-        }));
+        });
+        if (typeof self.side !== 'undefined') {
+          card.setSide(self.side);
+        }
+        newCards.push(card);
       });
       self.cards = newCards;
-      if (typeof self.layout === "function") {
-        self.layout();
-      }
-    };
-
-    self.addCard = function (card) {
-      self.cards.push(card);
       if (typeof self.layout === "function") {
         self.layout();
       }
@@ -1257,7 +1242,6 @@ var Deck = (function () {
 
     var $el = createElement('div');
     var self = observable({ mount: mount, unmount: unmount, cards: cards, cliques: cliques, $el: $el, serialize: serialize, generateNextCliqueId: generateNextCliqueId });
-    var $root;
 
     var modules = Deck.modules;
     var module;
@@ -1292,13 +1276,13 @@ var Deck = (function () {
 
     function mount(root) {
       // mount deck to root
-      $root = root;
-      $root.appendChild($el);
+      self.$root = root;
+      self.$root.appendChild($el);
     }
 
     function unmount() {
       // unmount deck from root
-      $root.removeChild($el);
+      self.$root.removeChild($el);
     }
 
     function addModule(module) {
