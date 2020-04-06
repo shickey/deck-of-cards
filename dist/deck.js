@@ -654,7 +654,7 @@ var Deck = (function () {
     var $back = createElement('div');
 
     // self = card
-    var self = { i: i, rank: rank, suit: suit, pos: i, $el: $el, mount: mount, unmount: unmount, setSide: setSide };
+    var self = { i: i, rank: rank, suit: suit, side: Card.Side.BACK, pos: i, $el: $el, mount: mount, unmount: unmount, setSide: setSide };
 
     var modules = Deck.modules;
     var module;
@@ -1105,7 +1105,7 @@ var Deck = (function () {
 
           cardsToAnimate.forEach(function (card, i) {
             var cardX = startX + (cardWidth + spacing) * i;
-            var cardY = prominentCards.has(i) ? -cardHeight / 4 : 0;
+            var cardY = self.prominentCards.has(i) ? -cardHeight / 4 : 0;
             var rads = self.rot * Math.PI / 180;
             var rotatedX = cardX * Math.cos(rads) - cardY * Math.sin(rads);
             var rotatedY = cardX * Math.sin(rads) + cardY * Math.cos(rads);
@@ -1231,7 +1231,46 @@ var Deck = (function () {
       if (self.prominentCards.has(index)) {
         self.prominentCards['delete'](index);
       }
+
+      // Update card prominences
+      var newProminences = new Set();
+      for (var val in self.prominentCards.values()) {
+        if (val.value < index) {
+          newProminences.add(val.value);
+        } else {
+          newProminences.add(val.value - 1);
+        }
+      }
+      self.prominentCards = newProminences;
+
       return card;
+    };
+
+    self.insertCardAtIndex = function (card, index, options) {
+      if (index < 0) {
+        return;
+      }
+      if (options && options.side) {
+        card.setSide(options.side);
+      } else {
+        card.setSide(self.side);
+      }
+      if (index > self.cards.length) {
+        self.addCard(card, options);
+        return;
+      }
+      self.cards.splice(index, 0, card);
+
+      // Update card prominences
+      var newProminences = new Set();
+      for (var val in self.prominentCards.values()) {
+        if (val.value < index) {
+          newProminences.add(val.value);
+        } else {
+          newProminences.add(val.value + 1);
+        }
+      }
+      self.prominentCards = newProminences;
     };
 
     self.replaceCardAtIndex = function (index, newCard, options) {
