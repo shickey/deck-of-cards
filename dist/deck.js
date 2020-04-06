@@ -815,6 +815,11 @@ var Deck = (function () {
     side = side || Card.Side.BACK;
     var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, $root: deck.$root, selectionEnabled: false });
 
+    cards.forEach(function (card) {
+      card.$el.onclick = null; // No clicking!
+    });
+
+    // Bottom of pile dummy card
     var dummyCard = { $el: createElement('div') };
     var dummyCardEl = dummyCard.$el;
     var transform = prefix('transform');
@@ -830,35 +835,100 @@ var Deck = (function () {
     };
     self.$root.appendChild(dummyCardEl);
 
-    cards.forEach(function (card) {
-      card.$el.onclick = null; // No clicking!
-    });
+    // Helper
+    var helper = { $el: createElement('div') };
+    var helperEl = helper.$el;
+    var transform = prefix('transform');
+    helperEl.classList.add('helper');
+    helperEl.style[transform] = translate(self.x + 'px', self.y + 'px');
+    helperEl.style.zIndex = 100; // Put the hlper above any cards
+
+    var helperShowing = false;
+
+    self.showHelper = function (enable, options) {
+      var animationDuration = options && options.animationDuration || (enable ? 500 : 250);
+      if (enable) {
+        if (options && options.content) {
+          helper.$el.textContent = ''; // Remove any children, if they exist
+          helper.$el.appendChild(options.content);
+        }
+        if (!helperShowing) {
+          self.queued(function (next) {
+            // Position the helper
+            var cardWidth = util.getCardWidth();
+            var spacing = cardWidth / 10;
+            var helperZ = self.cards.length / 4;
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ;
+            helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
+            helper.$el.style['opacity'] = 0;
+
+            self.$root.appendChild(helper.$el);
+            // Fade in
+            animationFrames(0, animationDuration).progress(function (t) {
+              var et = ease.cubicInOut(t);
+              helper.$el.style['opacity'] = et;
+            }).end(function () {
+              next();
+            });
+          })();
+        }
+        helperShowing = true;
+      } else {
+        if (helperShowing) {
+          self.queued(function (next) {
+            // Fade out
+            animationFrames(0, animationDuration).progress(function (t) {
+              var et = ease.cubicInOut(t);
+              helper.$el.style['opacity'] = 1.0 - et;
+            }).end(function () {
+              self.$root.removeChild(helper.$el);
+              next();
+            });
+          })();
+        }
+        helperShowing = false;
+      }
+    };
 
     self.layout = function () {
-      if (self.cards.length === 0) {
+      if (self.cards.length === 0 && !helperShowing) {
         return;
       }
       var cardsToAnimate = self.cards.slice();
+      var cardWidth = util.getCardWidth();
+      var spacing = cardWidth / 10;
       self.queued(function (next) {
-        cardsToAnimate.forEach(function (card, i) {
-          var z = i / 4;
-          card.setSide(self.side);
-          card.$el.style.zIndex = i;
-          card.animateTo({
-            delay: 0,
-            duration: 200,
+        if (self.cards.length > 0) {
+          cardsToAnimate.forEach(function (card, i) {
+            var z = i / 4;
+            card.setSide(self.side);
+            card.$el.style.zIndex = i;
+            card.animateTo({
+              delay: 0,
+              duration: 200,
 
-            x: self.x - z,
-            y: self.y - z,
-            rot: self.rot,
+              x: self.x - z,
+              y: self.y - z,
+              rot: self.rot,
 
-            onComplete: function onComplete() {
-              if (i === cardsToAnimate.length - 1) {
-                next();
+              onComplete: function onComplete() {
+                if (i === cardsToAnimate.length - 1) {
+                  next();
+                }
               }
-            }
+            });
           });
-        });
+          if (helperShowing) {
+            var helperZ = cardsToAnimate.length / 4;
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ;
+            helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
+          }
+        } else {
+          // Only the helper is showing
+          if (helperShowing) {
+            helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px');
+          }
+        }
       })();
     };
 
@@ -947,14 +1017,72 @@ var Deck = (function () {
     y = y || 0;
     rot = rot || 0;
     side = side || Card.Side.BACK;
-    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side });
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, $root: deck.$root });
 
     self.cards.forEach(function (card) {
       card.$el.onclick = null; // No clicking!
     });
 
+    var helper = { $el: createElement('div') };
+    var helperEl = helper.$el;
+    var transform = prefix('transform');
+    helperEl.classList.add('helper');
+    helperEl.style[transform] = translate(self.x + 'px', self.y + 'px');
+    helperEl.style.zIndex = 100; // Put the hlper above any cards
+
+    var helperShowing = false;
+
+    self.showHelper = function (enable, options) {
+      var animationDuration = options && options.animationDuration || (enable ? 500 : 250);
+      if (enable) {
+        if (options && options.content) {
+          helper.$el.textContent = ''; // Remove any children, if they exist
+          helper.$el.appendChild(options.content);
+        }
+        if (!helperShowing) {
+          self.queued(function (next) {
+            // Position the helper
+            var cardWidth = util.getCardWidth();
+            var spacing = cardWidth / 10;
+            var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
+            var handStartX = -(handWidth / 2);
+            var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8;
+            var rads = self.rot * Math.PI / 180;
+            var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
+            var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+            helper.$el.style[transform] = translate(self.x + rotatedX + 'px', self.y + rotatedY + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+            helper.$el.style['opacity'] = 0;
+
+            self.$root.appendChild(helper.$el);
+            // Fade in
+            animationFrames(0, animationDuration).progress(function (t) {
+              var et = ease.cubicInOut(t);
+              helper.$el.style['opacity'] = et;
+            }).end(function () {
+              next();
+            });
+          })();
+        }
+        helperShowing = true;
+      } else {
+        if (helperShowing) {
+          self.queued(function (next) {
+            // Fade out
+            animationFrames(0, animationDuration).progress(function (t) {
+              var et = ease.cubicInOut(t);
+              helper.$el.style['opacity'] = 1.0 - et;
+            }).end(function () {
+              self.$root.removeChild(helper.$el);
+              next();
+            });
+          })();
+        }
+        helperShowing = false;
+      }
+    };
+
     self.layout = function () {
-      if (self.cards.length === 0) {
+      if (self.cards.length === 0 && !helperShowing) {
         return;
       }
       var cardsToAnimate = self.cards.slice();
@@ -962,32 +1090,47 @@ var Deck = (function () {
       var spacing = cardWidth / 10;
       self.queued(function (next) {
 
-        // The "total width" is slightly weird here because we're actually calculating
-        // the distance between the *centers* of the first and last cards.
-        // I.e., we don't need to account for the left half of the first card
-        // and the right half of the last card, so we subtract a whole card
-        // from the `(cardWidth * cards.length)` calculation.
-        var totalWidth = cardWidth * (cardsToAnimate.length - 1) + spacing * (cardsToAnimate.length - 1);
+        if (self.cards.length > 0) {
+          // The "total width" is slightly weird here because we're actually calculating
+          // the distance between the *centers* of the first and last cards.
+          // I.e., we don't need to account for the left half of the first card
+          // and the right half of the last card, so we subtract a whole card
+          // from the `(cardWidth * cards.length)` calculation.
+          var totalWidth = cardWidth * (cardsToAnimate.length - 1) + spacing * (cardsToAnimate.length - 1);
 
-        var startX = -(totalWidth / 2);
+          var startX = -(totalWidth / 2);
 
-        cardsToAnimate.forEach(function (card, i) {
-          var cardX = startX + (cardWidth + spacing) * i;
-          var rads = self.rot * Math.PI / 180;
-          var rotatedX = cardX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
-          var rotatedY = cardX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
-          card.animateTo({
-            duration: 200,
-            x: self.x + rotatedX,
-            y: self.y + rotatedY,
-            rot: self.rot,
-            onComplete: function onComplete() {
-              if (i === cardsToAnimate.length - 1) {
-                next();
+          cardsToAnimate.forEach(function (card, i) {
+            var cardX = startX + (cardWidth + spacing) * i;
+            var rads = self.rot * Math.PI / 180;
+            var rotatedX = cardX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
+            var rotatedY = cardX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+            card.animateTo({
+              duration: 200,
+              x: self.x + rotatedX,
+              y: self.y + rotatedY,
+              rot: self.rot,
+              onComplete: function onComplete() {
+                if (i === cardsToAnimate.length - 1) {
+                  next();
+                }
               }
-            }
+            });
           });
-        });
+
+          if (helperShowing) {
+            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - cardWidth / 2;
+            var rads = self.rot * Math.PI / 180;
+            var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
+            var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+            helper.$el.style[transform] = translate(self.x + rotatedX + 'px', self.y + rotatedY + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+          }
+        } else {
+          // Only the helper is showing
+          if (helperShowing) {
+            helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+          }
+        }
       })();
     };
 
@@ -1065,16 +1208,25 @@ var Deck = (function () {
         return;
       }
       var card = self.cards[index];
+      if (self.selectionEnabled) {
+        setCardSelectable(card, false);
+      }
       self.cards.splice(index, 1);
       return card;
     };
 
     self.replaceCardAtIndex = function (index, newCard, options) {
       var replacing = self.cards[index];
+      if (self.selectionEnabled) {
+        setCardSelectable(replacing, false);
+      }
       if (options && options.side) {
         newCard.setSide(options.side);
       } else {
         newCard.setSide(self.side);
+      }
+      if (self.selectionEnabled) {
+        setCardSelectable(newCard, true);
       }
       self.cards[index] = newCard;
       return replacing;
