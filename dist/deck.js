@@ -1017,7 +1017,9 @@ var Deck = (function () {
     y = y || 0;
     rot = rot || 0;
     side = side || Card.Side.BACK;
-    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, $root: deck.$root });
+
+    var prominentCards = new Set();
+    var self = Object.assign(Clique(deck, cards), { x: x, y: y, rot: rot, side: side, prominentCards: prominentCards, $root: deck.$root });
 
     self.cards.forEach(function (card) {
       card.$el.onclick = null; // No clicking!
@@ -1087,6 +1089,7 @@ var Deck = (function () {
       }
       var cardsToAnimate = self.cards.slice();
       var cardWidth = util.getCardWidth();
+      var cardHeight = util.getCardHeight();
       var spacing = cardWidth / 10;
       self.queued(function (next) {
 
@@ -1102,9 +1105,10 @@ var Deck = (function () {
 
           cardsToAnimate.forEach(function (card, i) {
             var cardX = startX + (cardWidth + spacing) * i;
+            var cardY = prominentCards.has(i) ? -cardHeight / 4 : 0;
             var rads = self.rot * Math.PI / 180;
-            var rotatedX = cardX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
-            var rotatedY = cardX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+            var rotatedX = cardX * Math.cos(rads) - cardY * Math.sin(rads);
+            var rotatedY = cardX * Math.sin(rads) + cardY * Math.cos(rads);
             card.animateTo({
               duration: 200,
               x: self.x + rotatedX,
@@ -1119,7 +1123,7 @@ var Deck = (function () {
           });
 
           if (helperShowing) {
-            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - cardWidth / 2;
+            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - 3 * cardWidth / 8;
             var rads = self.rot * Math.PI / 180;
             var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
             var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
@@ -1132,6 +1136,18 @@ var Deck = (function () {
           }
         }
       })();
+    };
+
+    self.setCardProminentAtIndex = function (index, prominent) {
+      if (prominent && !self.prominentCards.has(index)) {
+        self.prominentCards.add(index);
+      } else if (!prominent && self.prominentCards.has(index)) {
+        self.prominentCards['delete'](index);
+      }
+    };
+
+    self.cardAtIndexIsProminent = function (index) {
+      return self.prominentCards.has(index);
     };
 
     self.peek = function (num) {
@@ -1212,6 +1228,9 @@ var Deck = (function () {
         setCardSelectable(card, false);
       }
       self.cards.splice(index, 1);
+      if (self.prominentCards.has(index)) {
+        self.prominentCards['delete'](index);
+      }
       return card;
     };
 
