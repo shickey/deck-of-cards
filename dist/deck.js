@@ -870,7 +870,7 @@ var Deck = (function () {
             }).end(function () {
               next();
             });
-          })();
+          }, 'PILE (' + self.id + ') show helper')();
         }
         helperShowing = true;
       } else {
@@ -884,13 +884,13 @@ var Deck = (function () {
               self.$root.removeChild(helper.$el);
               next();
             });
-          })();
+          }, 'PILE (' + self.id + ') hide helper')();
         }
         helperShowing = false;
       }
     };
 
-    self.layout = function () {
+    self.layout = function (info) {
       if (self.cards.length === 0 && !helperShowing) {
         return;
       }
@@ -898,7 +898,7 @@ var Deck = (function () {
       var cardWidth = util.getCardWidth();
       var spacing = cardWidth / 10;
       self.queued(function (next) {
-        if (self.cards.length > 0) {
+        if (cardsToAnimate.length > 0) {
           cardsToAnimate.forEach(function (card, i) {
             var z = i / 4;
             card.setSide(self.side);
@@ -929,7 +929,7 @@ var Deck = (function () {
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px');
           }
         }
-      })();
+      }, 'HAND (' + self.id + ') layout ' + (info ? ': ' + info : ''))();
     };
 
     self.popCard = function (num) {
@@ -957,15 +957,9 @@ var Deck = (function () {
       return drawnCards;
     };
 
-    self.pushCard = function (card, options) {
+    self.pushCard = function (card) {
       if (self.selectionEnabled) {
         setTopCardSelectable(false);
-      }
-
-      if (options && options.side) {
-        card.setSide(options.side);
-      } else {
-        card.setSide(self.side);
       }
       self.cards.push(card);
 
@@ -999,7 +993,7 @@ var Deck = (function () {
         self.selectionEnabled = enable;
         setTopCardSelectable(enable);
         next();
-      })();
+      }, 'PILE (' + self.id + ') enable selection (' + enable + ')')();
     };
 
     self.layout();
@@ -1063,7 +1057,7 @@ var Deck = (function () {
             }).end(function () {
               next();
             });
-          })();
+          }, 'HAND (' + self.id + ') show helper')();
         }
         helperShowing = true;
       } else {
@@ -1077,13 +1071,13 @@ var Deck = (function () {
               self.$root.removeChild(helper.$el);
               next();
             });
-          })();
+          }, 'HAND (' + self.id + ') hide helper')();
         }
         helperShowing = false;
       }
     };
 
-    self.layout = function () {
+    self.layout = function (info) {
       if (self.cards.length === 0 && !helperShowing) {
         return;
       }
@@ -1093,7 +1087,7 @@ var Deck = (function () {
       var spacing = cardWidth / 10;
       self.queued(function (next) {
 
-        if (self.cards.length > 0) {
+        if (cardsToAnimate.length > 0) {
           // The "total width" is slightly weird here because we're actually calculating
           // the distance between the *centers* of the first and last cards.
           // I.e., we don't need to account for the left half of the first card
@@ -1104,6 +1098,7 @@ var Deck = (function () {
           var startX = -(totalWidth / 2);
 
           cardsToAnimate.forEach(function (card, i) {
+            card.setSide(self.side);
             var cardX = startX + (cardWidth + spacing) * i;
             var cardY = self.prominentCards.has(i) ? -cardHeight / 4 : 0;
             var rads = self.rot * Math.PI / 180;
@@ -1135,7 +1130,7 @@ var Deck = (function () {
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
           }
         }
-      })();
+      }, 'HAND (' + self.id + ') layout ' + (info ? ': ' + info : ''))();
     };
 
     self.setCardProminentAtIndex = function (index, prominent) {
@@ -1182,7 +1177,7 @@ var Deck = (function () {
           card.$el.onclick = clickFunction;
         });
         next();
-      })();
+      }, 'HAND (' + self.id + ') peek')();
     };
 
     function setCardSelectable(card, selectable) {
@@ -1207,15 +1202,10 @@ var Deck = (function () {
           setCardSelectable(card, enable);
         });
         next();
-      })();
+      }, 'HAND (' + self.id + ') enable selection (' + enable + ')')();
     };
 
-    self.addCard = function (card, options) {
-      if (options && options.side) {
-        card.setSide(options.side);
-      } else {
-        card.setSide(self.side);
-      }
+    self.addCard = function (card) {
       self.cards.push(card);
     };
 
@@ -1246,14 +1236,9 @@ var Deck = (function () {
       return card;
     };
 
-    self.insertCardAtIndex = function (card, index, options) {
+    self.insertCardAtIndex = function (card, index) {
       if (index < 0) {
         return;
-      }
-      if (options && options.side) {
-        card.setSide(options.side);
-      } else {
-        card.setSide(self.side);
       }
       if (index > self.cards.length) {
         self.addCard(card, options);
@@ -1273,15 +1258,10 @@ var Deck = (function () {
       self.prominentCards = newProminences;
     };
 
-    self.replaceCardAtIndex = function (index, newCard, options) {
+    self.replaceCardAtIndex = function (index, newCard) {
       var replacing = self.cards[index];
       if (self.selectionEnabled) {
         setCardSelectable(replacing, false);
-      }
-      if (options && options.side) {
-        newCard.setSide(options.side);
-      } else {
-        newCard.setSide(self.side);
       }
       if (self.selectionEnabled) {
         setCardSelectable(newCard, true);
@@ -1351,7 +1331,14 @@ var Deck = (function () {
   function Clique(deck, cards, params) {
     var id = params && params.id || deck.generateNextCliqueId();
 
-    var self = observable({ id: id, deck: deck, cards: cards, queued: deck.queued });
+    var self = observable({
+      id: id,
+      deck: deck,
+      cards: cards,
+      queued: deck.queued,
+      beginQueueTransaction: deck.beginQueueTransaction,
+      endQueueTransaction: deck.endQueueTransaction,
+      withQueueTransaction: deck.withQueueTransaction });
 
     // Add all the deck modules to the clique
     var modules = Deck.modules;
@@ -1381,7 +1368,7 @@ var Deck = (function () {
       });
       self.cards = newCards;
       if (typeof self.layout === "function") {
-        self.layout();
+        self.layout('gather cards');
       }
     };
 
@@ -1403,35 +1390,47 @@ var Deck = (function () {
 
     var queueing = [];
 
+    var transacting = false;
+    var transactionEntries = [];
+
     target.queue = queue;
     target.queued = queued;
+    target.beginQueueTransaction = beginQueueTransaction;
+    target.endQueueTransaction = endQueueTransaction;
+    target.withQueueTransaction = withQueueTransaction;
 
     return target;
 
-    function queued(action) {
+    function queued(action, description) {
       return function () {
         var self = this;
         var args = arguments;
 
         queue(function (next) {
           action.apply(self, array.concat.apply(next, args));
-        });
+        }, description);
       };
     }
 
-    function queue(action) {
+    function queue(action, description) {
       if (!action) {
         return;
       }
 
-      queueing.push(action);
+      if (transacting) {
+        transactionEntries.push({ action: action, description: description });
+      } else {
+        queueing.push({ action: action, description: description });
 
-      if (queueing.length === 1) {
-        next();
+        if (queueing.length === 1) {
+          next();
+        }
       }
     }
+
     function next() {
-      queueing[0](function (err) {
+      var frame = queueing[0];
+      frame.action(function (err) {
         if (err) {
           throw err;
         }
@@ -1442,6 +1441,54 @@ var Deck = (function () {
           next();
         }
       });
+    }
+
+    // @NOTE/@TODO: It's not currently possible to nest transactions
+    function beginQueueTransaction() {
+      if (transacting) {
+        console.log("WARNING: Tried to begin a queue transaction while another was open. Ignoring.");
+        return;
+      }
+      transactionEntries = [];
+      transacting = true;
+    }
+
+    function endQueueTransaction() {
+      if (!transacting) {
+        console.log("WARNING: Tried to close a queue transaction without opening it first.");
+        return;
+      }
+      transacting = false;
+      if (transactionEntries.length === 0) {
+        return;
+      }
+
+      var entriesToRun = transactionEntries;
+      var transactionDescription = "Transaction:\n" + entriesToRun.map(function (entry) {
+        return '\t' + entry.description;
+      }).join('\n');
+      queue(function (next) {
+        // Keep track of total number of concurrent actions in the transaction
+        var totalEntriesToRun = entriesToRun.length;
+
+        // Kick off all the actions
+        entriesToRun.forEach(function (entry) {
+          // Run each action with a patched `next` that decrements the total entries left to run
+          entry.action(function () {
+            totalEntriesToRun--;
+            if (totalEntriesToRun === 0) {
+              // If all the entries have run, move on in the queue
+              next();
+            }
+          });
+        });
+      }, transactionDescription);
+    }
+
+    function withQueueTransaction(code) {
+      beginQueueTransaction();
+      code();
+      endQueueTransaction();
     }
   }
 
