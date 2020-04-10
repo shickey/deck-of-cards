@@ -662,6 +662,7 @@ var Deck = (function () {
     var module;
 
     // add classes
+    $el.classList.add('card');
     $face.classList.add('face');
     $back.classList.add('back');
 
@@ -736,7 +737,7 @@ var Deck = (function () {
     // set rank & suit
     self.setRankSuit = function (rank, suit) {
       var suitName = SuitName(suit);
-      $el.setAttribute('class', 'card ' + suitName + ' rank' + rank);
+      $el.classList.add(suitName, 'rank' + rank);
     };
 
     self.setRankSuit(rank, suit);
@@ -776,7 +777,8 @@ var Deck = (function () {
         }
         self.side = Card.Side.BACK;
         $el.appendChild($back);
-        $el.setAttribute('class', 'card');
+        $el.classList.remove('rank' + self.rank);
+        $el.classList.remove(SuitName(self.suit));
       }
     }
   }
@@ -1040,15 +1042,21 @@ var Deck = (function () {
         if (!helperShowing) {
           self.queued(function (next) {
             // Position the helper
-            var cardWidth = util.getCardWidth();
-            var spacing = cardWidth / 10;
-            var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
-            var handStartX = -(handWidth / 2);
-            var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8;
-            var rads = self.rot * Math.PI / 180;
-            var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
-            var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
-            helper.$el.style[transform] = translate(self.x + rotatedX + 'px', self.y + rotatedY + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+            if (self.cards.length > 0) {
+              var cardWidth = util.getCardWidth();
+              var spacing = cardWidth / 10;
+              var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
+              var handStartX = -(handWidth / 2);
+              var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8;
+              var rads = self.rot * Math.PI / 180;
+              var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
+              var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+              helper.$el.classList.remove('alone');
+              helper.$el.style[transform] = translate(self.x + rotatedX + 'px', self.y + rotatedY + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+            } else {
+              helper.$el.classList.add('alone');
+              helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
+            }
             helper.$el.style['opacity'] = 0;
 
             self.$root.appendChild(helper.$el);
@@ -1124,11 +1132,13 @@ var Deck = (function () {
             var rads = self.rot * Math.PI / 180;
             var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
             var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
+            helper.$el.classList.remove('alone');
             helper.$el.style[transform] = translate(self.x + rotatedX + 'px', self.y + rotatedY + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
           }
         } else {
           // Only the helper is showing
           if (helperShowing) {
+            helper.$el.classList.remove('alone');
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
           }
         }
@@ -1423,7 +1433,9 @@ var Deck = (function () {
         transactionEntries.push({ action: action, description: description });
       } else {
         queueing.push({ action: action, description: description });
-        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
+        console.log("QUEUE:\n" + queueing.map(function (entry) {
+          return '\t' + entry.description;
+        }).join('\n'));
 
         if (queueing.length === 1) {
           next();
