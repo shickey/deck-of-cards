@@ -879,16 +879,24 @@ var Deck = (function () {
         helperShowing = true;
       } else {
         if (helperShowing) {
-          self.queued(function (next) {
-            // Fade out
-            animationFrames(0, animationDuration).progress(function (t) {
-              var et = ease.cubicInOut(t);
-              helper.$el.style['opacity'] = 1.0 - et;
-            }).end(function () {
-              self.$root.removeChild(helper.$el);
-              next();
-            });
-          }, 'PILE (' + self.id + ') hide helper')();
+          (function () {
+            var captureClicks = function captureClicks(e) {
+              e.stopPropagation();
+            };
+            helper.$el.addEventListener('click', captureClicks, true); // Capture click events to prevent them from propagating down to children
+            self.queued(function (next) {
+              // Fade out
+              animationFrames(0, animationDuration).progress(function (t) {
+                var et = ease.cubicInOut(t);
+                helper.$el.style['opacity'] = 1.0 - et;
+              }).end(function () {
+                // Remove the capturing event listener
+                helper.$el.removeEventListener('click', captureClicks, true);
+                self.$root.removeChild(helper.$el);
+                next();
+              });
+            }, 'PILE (' + self.id + ') hide helper')();
+          })();
         }
         helperShowing = false;
       }
@@ -1072,16 +1080,24 @@ var Deck = (function () {
         helperShowing = true;
       } else {
         if (helperShowing) {
-          self.queued(function (next) {
-            // Fade out
-            animationFrames(0, animationDuration).progress(function (t) {
-              var et = ease.cubicInOut(t);
-              helper.$el.style['opacity'] = 1.0 - et;
-            }).end(function () {
-              self.$root.removeChild(helper.$el);
-              next();
-            });
-          }, 'HAND (' + self.id + ') hide helper')();
+          (function () {
+            var captureClicks = function captureClicks(e) {
+              e.stopPropagation();
+            };
+            helper.$el.addEventListener('click', captureClicks, true); // Capture click events to prevent them from propagating down to children
+            self.queued(function (next) {
+              // Fade out
+              animationFrames(0, animationDuration).progress(function (t) {
+                var et = ease.cubicInOut(t);
+                helper.$el.style['opacity'] = 1.0 - et;
+              }).end(function () {
+                // Remove the capturing event listener
+                helper.$el.removeEventListener('click', captureClicks, true);
+                self.$root.removeChild(helper.$el);
+                next();
+              });
+            }, 'HAND (' + self.id + ') hide helper')();
+          })();
         }
         helperShowing = false;
       }
@@ -1433,9 +1449,7 @@ var Deck = (function () {
         transactionEntries.push({ action: action, description: description });
       } else {
         queueing.push({ action: action, description: description });
-        console.log("QUEUE:\n" + queueing.map(function (entry) {
-          return '\t' + entry.description;
-        }).join('\n'));
+        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
 
         if (queueing.length === 1) {
           next();
