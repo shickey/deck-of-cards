@@ -305,24 +305,26 @@ var Deck = (function () {
 
   var shuffle = {
     deck: function deck(_deck4) {
-      _deck4.shuffle = _deck4.queued(shuffle);
+      _deck4.shuffle = shuffle;
 
       function shuffle(next) {
-        var cards = _deck4.cards;
-
         ____fontSize = fontSize();
 
-        fisherYates(cards);
+        _deck4.cards = fisherYates(_deck4.cards);
 
-        cards.forEach(function (card, i) {
-          card.pos = i;
+        var cardsToAnimate = _deck4.cards.slice();
 
-          card.shuffle(function (i) {
-            if (i === cards.length - 1) {
-              next();
-            }
+        _deck4.queued(function (next) {
+          cardsToAnimate.forEach(function (card, i) {
+            card.pos = i;
+
+            card.shuffle(function (i) {
+              if (i === cardsToAnimate.length - 1) {
+                next();
+              }
+            });
           });
-        });
+        })();
         return;
       }
     },
@@ -1421,6 +1423,7 @@ var Deck = (function () {
         transactionEntries.push({ action: action, description: description });
       } else {
         queueing.push({ action: action, description: description });
+        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
 
         if (queueing.length === 1) {
           next();
@@ -1465,7 +1468,7 @@ var Deck = (function () {
 
       var entriesToRun = transactionEntries;
       var transactionDescription = "Transaction:\n" + entriesToRun.map(function (entry) {
-        return '\t' + entry.description;
+        return '\t\t' + entry.description;
       }).join('\n');
       queue(function (next) {
         // Keep track of total number of concurrent actions in the transaction
