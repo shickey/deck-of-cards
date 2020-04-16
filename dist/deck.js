@@ -1159,7 +1159,7 @@ var Deck = (function () {
         } else {
           // Only the helper is showing
           if (helperShowing) {
-            helper.$el.classList.remove('alone');
+            helper.$el.classList.add('alone');
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
           }
         }
