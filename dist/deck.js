@@ -1178,41 +1178,6 @@ var Deck = (function () {
       return self.prominentCards.has(index);
     };
 
-    self.peek = function (num) {
-      var totalClicks = 0;
-      var cards = self.cards.slice();
-      self.queued(function (next) {
-        cards.forEach(function (card) {
-          card.setGlow(true);
-          var clickFunction = function clickFunction() {
-            totalClicks++;
-            if (totalClicks < num) {
-              card.setSide(Card.Side.FRONT);
-              card.$el.onclick = null;
-              card.setGlow(false);
-            } else if (totalClicks == num) {
-              card.setSide(Card.Side.FRONT);
-              cards.forEach(function (card) {
-                card.$el.onclick = clickFunction;
-                card.setGlow(true);
-              });
-            } else {
-              cards.forEach(function (card) {
-                card.setSide(Card.Side.BACK);
-                card.setGlow(false);
-                card.$el.onclick = null;
-                if (typeof self.onPeek === 'function') {
-                  self.onPeek();
-                }
-              });
-            }
-          };
-          card.$el.onclick = clickFunction;
-        });
-        next();
-      }, 'HAND (' + self.id + ') peek')();
-    };
-
     self.setCardSelectable = function (card, selectable) {
       if (selectable) {
         card.setGlow(true);
