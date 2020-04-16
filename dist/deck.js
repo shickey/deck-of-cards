@@ -209,20 +209,54 @@ var Deck = (function () {
     return plusminus * value;
   }
 
-  function fontSize() {
-    return window.getComputedStyle(document.body).getPropertyValue('font-size').slice(0, -2);
+  function fisherYates(array) {
+    var rnd, temp;
+
+    for (var i = array.length - 1; i; i--) {
+      rnd = Math.floor(Math.random() * (i + 1));
+      temp = array[i];
+      array[i] = array[rnd];
+      array[rnd] = temp;
+    }
+
+    return array;
   }
+
+  function getFontSize(deck) {
+    return window.getComputedStyle(deck.$root).getPropertyValue('font-size').slice(0, -2);
+  }
+
+  function getCardWidth(deck) {
+    var emHeight = getFontSize(deck);
+    return 62 / 16 * emHeight;
+  }
+
+  function getCardHeight(deck) {
+    var emHeight = getFontSize(deck);
+    return 88 / 16 * emHeight;
+  }
+
+  var util = {
+    fisherYates: fisherYates,
+    getFontSize: getFontSize,
+    getCardWidth: getCardWidth,
+    getCardHeight: getCardHeight
+  };
 
   /**
    * "Shuffles" the deck using the same animation as the shuffle module
    * but leaves the deck in the specific order passed in the params
    */
 
+  var ___fontSize;
+
   var shuffleTo = {
     deck: function deck(_deck3) {
       _deck3.shuffleTo = shuffleTo;
 
       function shuffleTo(params) {
+        ___fontSize = util.getFontSize(_deck3);
+
         var cards = _deck3.cards;
         var order = params.order;
 
@@ -253,8 +287,6 @@ var Deck = (function () {
     card: function card(_card2) {
       var $el = _card2.$el;
 
-      var fontSize$$ = fontSize();
-
       _card2.shuffleTo = function (cb) {
         var i = _card2.pos;
         var z = i / 4;
@@ -264,7 +296,7 @@ var Deck = (function () {
           delay: delay,
           duration: 200,
 
-          x: plusminus(Math.random() * 40 + 20) * fontSize$$ / 16,
+          x: plusminus(Math.random() * 40 + 20) * ___fontSize / 16,
           y: -z,
           rot: 0
         });
@@ -288,19 +320,6 @@ var Deck = (function () {
     }
   };
 
-  function fisherYates(array) {
-    var rnd, temp;
-
-    for (var i = array.length - 1; i; i--) {
-      rnd = Math.floor(Math.random() * (i + 1));
-      temp = array[i];
-      array[i] = array[rnd];
-      array[rnd] = temp;
-    }
-
-    return array;
-  }
-
   var ____fontSize;
 
   var shuffle = {
@@ -308,9 +327,9 @@ var Deck = (function () {
       _deck4.shuffle = shuffle;
 
       function shuffle(next) {
-        ____fontSize = fontSize();
+        ____fontSize = util.getFontSize(_deck4);
 
-        _deck4.cards = fisherYates(_deck4.cards);
+        _deck4.cards = util.fisherYates(_deck4.cards);
 
         var cardsToAnimate = _deck4.cards.slice();
 
@@ -375,7 +394,7 @@ var Deck = (function () {
         var cards = _deck5.cards;
         var len = cards.length;
 
-        __fontSize = fontSize();
+        __fontSize = util.getFontSize(_deck5);
 
         cards.slice(-5).reverse().forEach(function (card, i) {
           card.poker(i, len, function (i) {
@@ -543,7 +562,7 @@ var Deck = (function () {
         var cards = _deck7.cards;
         var len = cards.length;
 
-        _fontSize = fontSize();
+        _fontSize = util.getFontSize(_deck7);
 
         cards.forEach(function (card, i) {
           card.fan(i, len, function (i) {
@@ -594,7 +613,7 @@ var Deck = (function () {
     return degrees * Math.PI / 180;
   }
 
-  var ___fontSize;
+  var fontSize;
 
   var bysuit = {
     deck: function deck(_deck8) {
@@ -603,7 +622,7 @@ var Deck = (function () {
       function bysuit(next) {
         var cards = _deck8.cards;
 
-        ___fontSize = fontSize();
+        fontSize = util.getFontSize(_deck8);
 
         cards.forEach(function (card) {
           card.bysuit(function (i) {
@@ -626,8 +645,8 @@ var Deck = (function () {
           delay: delay,
           duration: 400,
 
-          x: -Math.round((6.75 - rank) * 8 * ___fontSize / 16),
-          y: -Math.round((1.5 - suit) * 92 * ___fontSize / 16),
+          x: -Math.round((6.75 - rank) * 8 * fontSize / 16),
+          y: -Math.round((1.5 - suit) * 92 * fontSize / 16),
           rot: 0,
 
           onComplete: function onComplete() {
@@ -793,20 +812,6 @@ var Deck = (function () {
     return suit === 0 ? 'spades' : suit === 1 ? 'hearts' : suit === 2 ? 'clubs' : suit === 3 ? 'diamonds' : 'joker';
   }
 
-  function getCardWidth() {
-    return 62 / 16 * fontSize();
-  }
-
-  function getCardHeight() {
-    return 88 / 16 * fontSize();
-  }
-
-  var util = {
-    fisherYates: fisherYates,
-    getCardWidth: getCardWidth,
-    getCardHeight: getCardHeight
-  };
-
   function Pile(deck, cards, params) {
     var x = params.x;
     var y = params.y;
@@ -824,20 +829,20 @@ var Deck = (function () {
     });
 
     // Bottom of pile dummy card
-    var dummyCard = { $el: createElement('div') };
-    var dummyCardEl = dummyCard.$el;
+    var pileOutline = { $el: createElement('div') };
+    var pileOutlineEl = pileOutline.$el;
     var transform = prefix('transform');
-    dummyCardEl.classList.add('card');
-    dummyCardEl.style[transform] = translate(self.x + 'px', self.y + 'px');
-    dummyCardEl.style.zIndex = -1;
-    dummyCard.setGlow = function (enable) {
+    pileOutlineEl.classList.add('pile-outline');
+    pileOutlineEl.style[transform] = translate(self.x + 'px', self.y + 'px');
+    pileOutlineEl.style.zIndex = -1;
+    pileOutline.setGlow = function (enable) {
       if (enable) {
         this.$el.classList.add('glow');
       } else {
         this.$el.classList.remove('glow');
       }
     };
-    self.$root.appendChild(dummyCardEl);
+    self.$root.appendChild(pileOutlineEl);
 
     // Helper
     var helper = { $el: createElement('div') };
@@ -859,7 +864,7 @@ var Deck = (function () {
         if (!helperShowing) {
           self.queued(function (next) {
             // Position the helper
-            var cardWidth = util.getCardWidth();
+            var cardWidth = util.getCardWidth(self.deck);
             var spacing = cardWidth / 10;
             var helperZ = self.cards.length / 4;
             var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ;
@@ -907,7 +912,7 @@ var Deck = (function () {
         return;
       }
       var cardsToAnimate = self.cards.slice();
-      var cardWidth = util.getCardWidth();
+      var cardWidth = util.getCardWidth(self.deck);
       var spacing = cardWidth / 10;
       self.queued(function (next) {
         if (cardsToAnimate.length > 0) {
@@ -983,7 +988,7 @@ var Deck = (function () {
     function setTopCardSelectable(selectable) {
       var topCard = {};
       if (self.cards.length === 0) {
-        topCard = dummyCard;
+        topCard = pileOutline;
       } else {
         topCard = self.cards[self.cards.length - 1];
       }
@@ -1051,7 +1056,7 @@ var Deck = (function () {
           self.queued(function (next) {
             // Position the helper
             if (self.cards.length > 0) {
-              var cardWidth = util.getCardWidth();
+              var cardWidth = util.getCardWidth(self.deck);
               var spacing = cardWidth / 10;
               var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
               var handStartX = -(handWidth / 2);
@@ -1108,8 +1113,8 @@ var Deck = (function () {
         return;
       }
       var cardsToAnimate = self.cards.slice();
-      var cardWidth = util.getCardWidth();
-      var cardHeight = util.getCardHeight();
+      var cardWidth = util.getCardWidth(self.deck);
+      var cardHeight = util.getCardHeight(self.deck);
       var spacing = cardWidth / 10;
       self.queued(function (next) {
 
@@ -1208,7 +1213,7 @@ var Deck = (function () {
       }, 'HAND (' + self.id + ') peek')();
     };
 
-    function setCardSelectable(card, selectable) {
+    self.setCardSelectable = function (card, selectable) {
       if (selectable) {
         card.setGlow(true);
         card.$el.onclick = function () {
@@ -1221,13 +1226,13 @@ var Deck = (function () {
         card.setGlow(false);
         card.$el.onclick = null;
       }
-    }
+    };
 
     self.enableSelection = function (enable) {
       self.queued(function (next) {
         self.selectionEnabled = enable;
         self.cards.forEach(function (card) {
-          setCardSelectable(card, enable);
+          self.setCardSelectable(card, enable);
         });
         next();
       }, 'HAND (' + self.id + ') enable selection (' + enable + ')')();
@@ -1243,7 +1248,7 @@ var Deck = (function () {
       }
       var card = self.cards[index];
       if (self.selectionEnabled) {
-        setCardSelectable(card, false);
+        self.setCardSelectable(card, false);
       }
       self.cards.splice(index, 1);
       if (self.prominentCards.has(index)) {
@@ -1289,10 +1294,10 @@ var Deck = (function () {
     self.replaceCardAtIndex = function (index, newCard) {
       var replacing = self.cards[index];
       if (self.selectionEnabled) {
-        setCardSelectable(replacing, false);
+        self.setCardSelectable(replacing, false);
       }
       if (self.selectionEnabled) {
-        setCardSelectable(newCard, true);
+        self.setCardSelectable(newCard, true);
       }
       self.cards[index] = newCard;
       return replacing;
