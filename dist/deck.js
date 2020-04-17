@@ -867,7 +867,7 @@ var Deck = (function () {
             var cardWidth = util.getCardWidth(self.deck);
             var spacing = cardWidth / 10;
             var helperZ = self.cards.length / 4;
-            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ;
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * util.getFontSize(self.deck);
             helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
             helper.$el.style['opacity'] = 0;
 
@@ -937,7 +937,7 @@ var Deck = (function () {
           });
           if (helperShowing) {
             var helperZ = cardsToAnimate.length / 4;
-            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ;
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * util.getFontSize(self.deck);
             helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
           }
         } else {
