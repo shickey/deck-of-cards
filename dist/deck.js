@@ -985,6 +985,11 @@ var Deck = (function () {
       }
     };
 
+    self.removeAllCards = function () {
+      self.enableSelection(false);
+      self.cards = [];
+    };
+
     function setTopCardSelectable(selectable) {
       var topCard = {};
       if (self.cards.length === 0) {
@@ -1205,6 +1210,12 @@ var Deck = (function () {
 
     self.addCard = function (card) {
       self.cards.push(card);
+    };
+
+    self.removeAllCards = function () {
+      self.enableSelection(false);
+      self.cards = [];
+      self.prominentCards = new Set();
     };
 
     self.removeCardAtIndex = function (index) {
