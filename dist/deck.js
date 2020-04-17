@@ -1060,7 +1060,7 @@ var Deck = (function () {
               var spacing = cardWidth / 10;
               var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
               var handStartX = -(handWidth / 2);
-              var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8;
+              var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8 + 8 * util.getFontSize(self.deck);
               var rads = self.rot * Math.PI / 180;
               var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
               var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
@@ -1149,7 +1149,7 @@ var Deck = (function () {
           });
 
           if (helperShowing) {
-            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - 3 * cardWidth / 8;
+            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - 3 * cardWidth / 8 + 8 * util.getFontSize(self.deck);
             var rads = self.rot * Math.PI / 180;
             var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
             var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
