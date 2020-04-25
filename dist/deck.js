@@ -945,6 +945,7 @@ var Deck = (function () {
           if (helperShowing) {
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px');
           }
+          next();
         }
       }, 'HAND (' + self.id + ') layout ' + (info ? ': ' + info : ''))();
     };
@@ -1167,6 +1168,7 @@ var Deck = (function () {
             helper.$el.classList.add('alone');
             helper.$el.style[transform] = translate(self.x + 'px', self.y + 'px') + (self.rot ? 'rotate(' + self.rot + 'deg)' : '');
           }
+          next();
         }
       }, 'HAND (' + self.id + ') layout ' + (info ? ': ' + info : ''))();
     };
@@ -1376,9 +1378,6 @@ var Deck = (function () {
         newCards.push(card);
       });
       self.cards = newCards;
-      if (typeof self.layout === "function") {
-        self.layout('gather cards');
-      }
     };
 
     // Register clique with its deck
@@ -1430,7 +1429,9 @@ var Deck = (function () {
         transactionEntries.push({ action: action, description: description });
       } else {
         queueing.push({ action: action, description: description });
-        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
+        console.log("QUEUE:\n" + queueing.map(function (entry) {
+          return '\t' + entry.description;
+        }).join('\n'));
 
         if (queueing.length === 1) {
           next();
@@ -1446,6 +1447,9 @@ var Deck = (function () {
         }
 
         queueing = queueing.slice(1);
+        console.log("QUEUE:\n" + queueing.map(function (entry) {
+          return '\t' + entry.description;
+        }).join('\n'));
 
         if (queueing.length) {
           next();
