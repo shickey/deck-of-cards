@@ -922,7 +922,7 @@ var Deck = (function () {
             card.$el.style.zIndex = i;
             card.animateTo({
               delay: 0,
-              duration: 200,
+              duration: 500,
 
               x: self.x - z,
               y: self.y - z,
@@ -1142,7 +1142,7 @@ var Deck = (function () {
             var rotatedX = cardX * Math.cos(rads) - cardY * Math.sin(rads);
             var rotatedY = cardX * Math.sin(rads) + cardY * Math.cos(rads);
             card.animateTo({
-              duration: 200,
+              duration: 500,
               x: self.x + rotatedX,
               y: self.y + rotatedY,
               rot: self.rot,
@@ -1429,9 +1429,7 @@ var Deck = (function () {
         transactionEntries.push({ action: action, description: description });
       } else {
         queueing.push({ action: action, description: description });
-        console.log("QUEUE:\n" + queueing.map(function (entry) {
-          return '\t' + entry.description;
-        }).join('\n'));
+        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
 
         if (queueing.length === 1) {
           next();
@@ -1447,9 +1445,6 @@ var Deck = (function () {
         }
 
         queueing = queueing.slice(1);
-        console.log("QUEUE:\n" + queueing.map(function (entry) {
-          return '\t' + entry.description;
-        }).join('\n'));
 
         if (queueing.length) {
           next();
