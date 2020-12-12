@@ -3,6 +3,10 @@
 var Deck = (function () {
   'use strict';
 
+  function createElement(type) {
+    return document.createElement(type);
+  }
+
   var ticking;
   var animations = [];
 
@@ -126,89 +130,6 @@ var Deck = (function () {
     }
   };
 
-  var flip = {
-    deck: function deck(_deck) {
-      _deck.flip = _deck.queued(flip);
-
-      function flip(next, side) {
-        var flipped = _deck.cards.filter(function (card) {
-          return card.side === 'front';
-        }).length / _deck.cards.length;
-
-        _deck.cards.forEach(function (card, i) {
-          card.setSide(side ? side : flipped > 0.5 ? 'back' : 'front');
-        });
-        next();
-      }
-    }
-  };
-
-  var sort = {
-    deck: function deck(_deck2) {
-      _deck2.sort = _deck2.queued(sort);
-
-      function sort(next, reverse) {
-        var cards = _deck2.cards;
-
-        cards.sort(function (a, b) {
-          if (reverse) {
-            return a.i - b.i;
-          } else {
-            return b.i - a.i;
-          }
-        });
-
-        cards.forEach(function (card, i) {
-          card.sort(i, cards.length, function (i) {
-            if (i === cards.length - 1) {
-              next();
-            }
-          }, reverse);
-        });
-      }
-    },
-    card: function card(_card) {
-      var $el = _card.$el;
-
-      _card.sort = function (i, len, cb, reverse) {
-        var z = i / 4;
-        var delay = i * 10;
-
-        _card.animateTo({
-          delay: delay,
-          duration: 400,
-
-          x: -z,
-          y: -150,
-          rot: 0,
-
-          onComplete: function onComplete() {
-            $el.style.zIndex = i;
-          }
-        });
-
-        _card.animateTo({
-          delay: delay + 500,
-          duration: 400,
-
-          x: -z,
-          y: -z,
-          rot: 0,
-
-          onComplete: function onComplete() {
-            cb(i);
-          }
-        });
-      };
-    }
-  };
-
-  function plusminus(value) {
-    var plusminus = Math.round(Math.random()) ? -1 : 1;
-
-    return plusminus * value;
-  }
-
   function fisherYates(array) {
     var rnd, temp;
 
@@ -236,193 +157,49 @@ var Deck = (function () {
     return 88 / 16 * emHeight;
   }
 
-  var util = {
+  var Util = {
     fisherYates: fisherYates,
     getFontSize: getFontSize,
     getCardWidth: getCardWidth,
     getCardHeight: getCardHeight
   };
 
-  /**
-   * "Shuffles" the deck using the same animation as the shuffle module
-   * but leaves the deck in the specific order passed in the params
-   */
+  var fontSize;
 
-  var ___fontSize;
+  var bysuit = {
+    deck: function deck(_deck) {
+      _deck.bysuit = _deck.queued(bysuit);
 
-  var shuffleTo = {
-    deck: function deck(_deck3) {
-      _deck3.shuffleTo = shuffleTo;
+      function bysuit(next) {
+        var cards = _deck.cards;
 
-      function shuffleTo(params) {
-        ___fontSize = util.getFontSize(_deck3);
+        fontSize = Util.getFontSize(_deck);
 
-        var cards = _deck3.cards;
-        var order = params.order;
-
-        var newCards = Array(cards.length);
-        order.forEach(function (cardVal, i) {
-          newCards[i] = cards.find(function (card) {
-            return card.i == cardVal;
-          });
-        });
-
-        _deck3.cards = newCards.slice();
-
-        _deck3.queued(function (next) {
-
-          newCards.forEach(function (card, i) {
-            card.pos = i;
-
-            card.shuffleTo(function (i) {
-              if (i === newCards.length - 1) {
-                next();
-              }
-            });
-          });
-        })();
-        return;
-      }
-    },
-    card: function card(_card2) {
-      var $el = _card2.$el;
-
-      _card2.shuffleTo = function (cb) {
-        var i = _card2.pos;
-        var z = i / 4;
-        var delay = i * 2;
-
-        _card2.animateTo({
-          delay: delay,
-          duration: 200,
-
-          x: plusminus(Math.random() * 40 + 20) * ___fontSize / 16,
-          y: -z,
-          rot: 0
-        });
-        _card2.animateTo({
-          delay: 200 + delay,
-          duration: 200,
-
-          x: -z,
-          y: -z,
-          rot: 0,
-
-          onStart: function onStart() {
-            $el.style.zIndex = i;
-          },
-
-          onComplete: function onComplete() {
-            cb(i);
-          }
-        });
-      };
-    }
-  };
-
-  var ____fontSize;
-
-  var shuffle = {
-    deck: function deck(_deck4) {
-      _deck4.shuffle = shuffle;
-
-      function shuffle(next) {
-        ____fontSize = util.getFontSize(_deck4);
-
-        _deck4.cards = util.fisherYates(_deck4.cards);
-
-        var cardsToAnimate = _deck4.cards.slice();
-
-        _deck4.queued(function (next) {
-          cardsToAnimate.forEach(function (card, i) {
-            card.pos = i;
-
-            card.shuffle(function (i) {
-              if (i === cardsToAnimate.length - 1) {
-                next();
-              }
-            });
-          });
-        })();
-        return;
-      }
-    },
-
-    card: function card(_card3) {
-      var $el = _card3.$el;
-
-      _card3.shuffle = function (cb) {
-        var i = _card3.pos;
-        var z = i / 4;
-        var delay = i * 2;
-
-        _card3.animateTo({
-          delay: delay,
-          duration: 200,
-
-          x: plusminus(Math.random() * 40 + 20) * ____fontSize / 16,
-          y: -z,
-          rot: 0
-        });
-        _card3.animateTo({
-          delay: 200 + delay,
-          duration: 200,
-
-          x: -z,
-          y: -z,
-          rot: 0,
-
-          onStart: function onStart() {
-            $el.style.zIndex = i;
-          },
-
-          onComplete: function onComplete() {
-            cb(i);
-          }
-        });
-      };
-    }
-  };
-
-  var __fontSize;
-
-  var poker = {
-    deck: function deck(_deck5) {
-      _deck5.poker = _deck5.queued(poker);
-
-      function poker(next) {
-        var cards = _deck5.cards;
-        var len = cards.length;
-
-        __fontSize = util.getFontSize(_deck5);
-
-        cards.slice(-5).reverse().forEach(function (card, i) {
-          card.poker(i, len, function (i) {
-            card.setSide('front');
-            if (i === 4) {
+        cards.forEach(function (card) {
+          card.bysuit(function (i) {
+            if (i === cards.length - 1) {
               next();
             }
           });
         });
       }
     },
-    card: function card(_card4) {
-      var $el = _card4.$el;
+    card: function card(_card) {
+      var rank = _card.rank;
+      var suit = _card.suit;
 
-      _card4.poker = function (i, len, cb) {
-        var delay = i * 250;
+      _card.bysuit = function (cb) {
+        var i = _card.i;
+        var delay = i * 10;
 
-        _card4.animateTo({
+        _card.animateTo({
           delay: delay,
-          duration: 250,
+          duration: 400,
 
-          x: Math.round((i - 2.05) * 70 * __fontSize / 16),
-          y: Math.round(-110 * __fontSize / 16),
+          x: -Math.round((6.75 - rank) * 8 * fontSize / 16),
+          y: -Math.round((1.5 - suit) * 92 * fontSize / 16),
           rot: 0,
 
-          onStart: function onStart() {
-            $el.style.zIndex = len - 1 + i;
-          },
           onComplete: function onComplete() {
             cb(i);
           }
@@ -430,6 +207,67 @@ var Deck = (function () {
       };
     }
   };
+
+  var fontSize$1;
+
+  var fan = {
+    deck: function deck(_deck2) {
+      _deck2.fan = _deck2.queued(fan);
+
+      function fan(next) {
+        var cards = _deck2.cards;
+        var len = cards.length;
+
+        fontSize$1 = Util.getFontSize(_deck2);
+
+        cards.forEach(function (card, i) {
+          card.fan(i, len, function (i) {
+            if (i === cards.length - 1) {
+              next();
+            }
+          });
+        });
+      }
+    },
+    card: function card(_card2) {
+      var $el = _card2.$el;
+
+      _card2.fan = function (i, len, cb) {
+        var z = i / 4;
+        var delay = i * 10;
+        var rot = i / (len - 1) * 260 - 130;
+
+        _card2.animateTo({
+          delay: delay,
+          duration: 300,
+
+          x: -z,
+          y: -z,
+          rot: 0
+        });
+        _card2.animateTo({
+          delay: 300 + delay,
+          duration: 300,
+
+          x: Math.cos(deg2rad(rot - 90)) * 55 * fontSize$1 / 16,
+          y: Math.sin(deg2rad(rot - 90)) * 55 * fontSize$1 / 16,
+          rot: rot,
+
+          onStart: function onStart() {
+            $el.style.zIndex = i;
+          },
+
+          onComplete: function onComplete() {
+            cb(i);
+          }
+        });
+      };
+    }
+  };
+
+  function deg2rad(degrees) {
+    return degrees * Math.PI / 180;
+  }
 
   var style = document.createElement('p').style;
   var memoized = {};
@@ -495,11 +333,11 @@ var Deck = (function () {
   }
 
   var intro = {
-    deck: function deck(_deck6) {
-      _deck6.intro = _deck6.queued(intro);
+    deck: function deck(_deck3) {
+      _deck3.intro = _deck3.queued(intro);
 
       function intro(next) {
-        var cards = _deck6.cards;
+        var cards = _deck3.cards;
 
         cards.forEach(function (card, i) {
           card.setSide('back');
@@ -514,23 +352,23 @@ var Deck = (function () {
         });
       }
     },
-    card: function card(_card5) {
+    card: function card(_card3) {
       var transform = prefix('transform');
 
-      var $el = _card5.$el;
+      var $el = _card3.$el;
 
-      _card5.intro = function (i, cb) {
+      _card3.intro = function (i, cb) {
         var delay = 500 + i * 10;
         var z = i / 4;
 
         $el.style[transform] = translate(-z + 'px', '-250px');
         $el.style.opacity = 0;
 
-        _card5.x = -z;
-        _card5.y = -250 - z;
-        _card5.rot = 0;
+        _card3.x = -z;
+        _card3.y = -250 - z;
+        _card3.rot = 0;
 
-        _card5.animateTo({
+        _card3.animateTo({
           delay: delay,
           duration: 1000,
 
@@ -552,50 +390,110 @@ var Deck = (function () {
     }
   };
 
-  var _fontSize;
+  var fontSize$2;
 
-  var fan = {
-    deck: function deck(_deck7) {
-      _deck7.fan = _deck7.queued(fan);
+  var poker = {
+    deck: function deck(_deck4) {
+      _deck4.poker = _deck4.queued(poker);
 
-      function fan(next) {
-        var cards = _deck7.cards;
+      function poker(next) {
+        var cards = _deck4.cards;
         var len = cards.length;
 
-        _fontSize = util.getFontSize(_deck7);
+        fontSize$2 = Util.getFontSize(_deck4);
 
-        cards.forEach(function (card, i) {
-          card.fan(i, len, function (i) {
-            if (i === cards.length - 1) {
+        cards.slice(-5).reverse().forEach(function (card, i) {
+          card.poker(i, len, function (i) {
+            card.setSide('front');
+            if (i === 4) {
               next();
             }
           });
         });
       }
     },
-    card: function card(_card6) {
-      var $el = _card6.$el;
+    card: function card(_card4) {
+      var $el = _card4.$el;
 
-      _card6.fan = function (i, len, cb) {
-        var z = i / 4;
-        var delay = i * 10;
-        var rot = i / (len - 1) * 260 - 130;
+      _card4.poker = function (i, len, cb) {
+        var delay = i * 250;
 
-        _card6.animateTo({
+        _card4.animateTo({
           delay: delay,
-          duration: 300,
+          duration: 250,
 
-          x: -z,
+          x: Math.round((i - 2.05) * 70 * fontSize$2 / 16),
+          y: Math.round(-110 * fontSize$2 / 16),
+          rot: 0,
+
+          onStart: function onStart() {
+            $el.style.zIndex = len - 1 + i;
+          },
+          onComplete: function onComplete() {
+            cb(i);
+          }
+        });
+      };
+    }
+  };
+
+  function plusMinus(value) {
+    var plusminus = Math.round(Math.random()) ? -1 : 1;
+
+    return plusminus * value;
+  }
+
+  var fontSize$3;
+
+  var shuffle = {
+    deck: function deck(_deck5) {
+      _deck5.shuffle = shuffle;
+
+      function shuffle(next) {
+        fontSize$3 = Util.getFontSize(_deck5);
+
+        _deck5.cards = Util.fisherYates(_deck5.cards);
+
+        var cardsToAnimate = _deck5.cards.slice();
+
+        _deck5.queued(function (next) {
+          cardsToAnimate.forEach(function (card, i) {
+            card.pos = i;
+
+            card.shuffle(function (i) {
+              if (i === cardsToAnimate.length - 1) {
+                next();
+              }
+            });
+          });
+        })();
+        return;
+      }
+    },
+
+    card: function card(_card5) {
+      var $el = _card5.$el;
+
+      _card5.shuffle = function (cb) {
+        var i = _card5.pos;
+        var z = i / 4;
+        var delay = i * 2;
+
+        _card5.animateTo({
+          delay: delay,
+          duration: 200,
+
+          x: plusMinus(Math.random() * 40 + 20) * fontSize$3 / 16,
           y: -z,
           rot: 0
         });
-        _card6.animateTo({
-          delay: 300 + delay,
-          duration: 300,
+        _card5.animateTo({
+          delay: 200 + delay,
+          duration: 200,
 
-          x: Math.cos(deg2rad(rot - 90)) * 55 * _fontSize / 16,
-          y: Math.sin(deg2rad(rot - 90)) * 55 * _fontSize / 16,
-          rot: rot,
+          x: -z,
+          y: -z,
+          rot: 0,
 
           onStart: function onStart() {
             $el.style.zIndex = i;
@@ -609,44 +507,133 @@ var Deck = (function () {
     }
   };
 
-  function deg2rad(degrees) {
-    return degrees * Math.PI / 180;
-  }
+  /**
+   * "Shuffles" the deck using the same animation as the shuffle module
+   * but leaves the deck in the specific order passed in the params
+   */
 
-  var fontSize;
+  var fontSize$4;
 
-  var bysuit = {
-    deck: function deck(_deck8) {
-      _deck8.bysuit = _deck8.queued(bysuit);
+  var shuffleTo = {
+    deck: function deck(_deck6) {
+      _deck6.shuffleTo = shuffleTo;
 
-      function bysuit(next) {
-        var cards = _deck8.cards;
+      function shuffleTo(params) {
+        fontSize$4 = Util.getFontSize(_deck6);
 
-        fontSize = util.getFontSize(_deck8);
+        var cards = _deck6.cards;
+        var order = params.order;
 
-        cards.forEach(function (card) {
-          card.bysuit(function (i) {
+        var newCards = Array(cards.length);
+        order.forEach(function (cardVal, i) {
+          newCards[i] = cards.find(function (card) {
+            return card.i == cardVal;
+          });
+        });
+
+        _deck6.cards = newCards.slice();
+
+        _deck6.queued(function (next) {
+
+          newCards.forEach(function (card, i) {
+            card.pos = i;
+
+            card.shuffleTo(function (i) {
+              if (i === newCards.length - 1) {
+                next();
+              }
+            });
+          });
+        })();
+        return;
+      }
+    },
+    card: function card(_card6) {
+      var $el = _card6.$el;
+
+      _card6.shuffleTo = function (cb) {
+        var i = _card6.pos;
+        var z = i / 4;
+        var delay = i * 2;
+
+        _card6.animateTo({
+          delay: delay,
+          duration: 200,
+
+          x: plusMinus(Math.random() * 40 + 20) * fontSize$4 / 16,
+          y: -z,
+          rot: 0
+        });
+        _card6.animateTo({
+          delay: 200 + delay,
+          duration: 200,
+
+          x: -z,
+          y: -z,
+          rot: 0,
+
+          onStart: function onStart() {
+            $el.style.zIndex = i;
+          },
+
+          onComplete: function onComplete() {
+            cb(i);
+          }
+        });
+      };
+    }
+  };
+
+  var sort = {
+    deck: function deck(_deck7) {
+      _deck7.sort = _deck7.queued(sort);
+
+      function sort(next, reverse) {
+        var cards = _deck7.cards;
+
+        cards.sort(function (a, b) {
+          if (reverse) {
+            return a.i - b.i;
+          } else {
+            return b.i - a.i;
+          }
+        });
+
+        cards.forEach(function (card, i) {
+          card.sort(i, cards.length, function (i) {
             if (i === cards.length - 1) {
               next();
             }
-          });
+          }, reverse);
         });
       }
     },
     card: function card(_card7) {
-      var rank = _card7.rank;
-      var suit = _card7.suit;
+      var $el = _card7.$el;
 
-      _card7.bysuit = function (cb) {
-        var i = _card7.i;
+      _card7.sort = function (i, len, cb, reverse) {
+        var z = i / 4;
         var delay = i * 10;
 
         _card7.animateTo({
           delay: delay,
           duration: 400,
 
-          x: -Math.round((6.75 - rank) * 8 * fontSize / 16),
-          y: -Math.round((1.5 - suit) * 92 * fontSize / 16),
+          x: -z,
+          y: -150,
+          rot: 0,
+
+          onComplete: function onComplete() {
+            $el.style.zIndex = i;
+          }
+        });
+
+        _card7.animateTo({
+          delay: delay + 500,
+          duration: 400,
+
+          x: -z,
+          y: -z,
           rot: 0,
 
           onComplete: function onComplete() {
@@ -657,8 +644,182 @@ var Deck = (function () {
     }
   };
 
-  function createElement(type) {
-    return document.createElement(type);
+  var flip = {
+    deck: function deck(_deck8) {
+      _deck8.flip = _deck8.queued(flip);
+
+      function flip(next, side) {
+        var flipped = _deck8.cards.filter(function (card) {
+          return card.side === 'front';
+        }).length / _deck8.cards.length;
+
+        _deck8.cards.forEach(function (card, i) {
+          card.setSide(side ? side : flipped > 0.5 ? 'back' : 'front');
+        });
+        next();
+      }
+    }
+  };
+
+  function observable(target) {
+    target || (target = {});
+    var listeners = {};
+
+    target.on = on;
+    target.one = one;
+    target.off = off;
+    target.trigger = trigger;
+
+    return target;
+
+    function on(name, cb, ctx) {
+      listeners[name] || (listeners[name] = []);
+      listeners[name].push({ cb: cb, ctx: ctx });
+    }
+
+    function one(name, cb, ctx) {
+      listeners[name] || (listeners[name] = []);
+      listeners[name].push({
+        cb: cb, ctx: ctx, once: true
+      });
+    }
+
+    function trigger(name) {
+      var self = this;
+      var args = Array.prototype.slice(arguments, 1);
+
+      var currentListeners = listeners[name] || [];
+
+      currentListeners.filter(function (listener) {
+        listener.cb.apply(self, args);
+
+        return !listener.once;
+      });
+    }
+
+    function off(name, cb) {
+      if (!name) {
+        listeners = {};
+        return;
+      }
+
+      if (!cb) {
+        listeners[name] = [];
+        return;
+      }
+
+      listeners[name] = listeners[name].filter(function (listener) {
+        return listener.cb !== cb;
+      });
+    }
+  }
+
+  function queue(target) {
+    var array = Array.prototype;
+
+    var queueing = [];
+
+    var transacting = false;
+    var transactionEntries = [];
+
+    target.queue = queue;
+    target.queued = queued;
+    target.beginQueueTransaction = beginQueueTransaction;
+    target.endQueueTransaction = endQueueTransaction;
+    target.withQueueTransaction = withQueueTransaction;
+
+    return target;
+
+    function queued(action, description) {
+      return function () {
+        var self = this;
+        var args = arguments;
+
+        queue(function (next) {
+          action.apply(self, array.concat.apply(next, args));
+        }, description);
+      };
+    }
+
+    function queue(action, description) {
+      if (!action) {
+        return;
+      }
+
+      if (transacting) {
+        transactionEntries.push({ action: action, description: description });
+      } else {
+        queueing.push({ action: action, description: description });
+        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
+
+        if (queueing.length === 1) {
+          next();
+        }
+      }
+    }
+
+    function next() {
+      var frame = queueing[0];
+      frame.action(function (err) {
+        if (err) {
+          throw err;
+        }
+
+        queueing = queueing.slice(1);
+
+        if (queueing.length) {
+          next();
+        }
+      });
+    }
+
+    // @NOTE/@TODO: It's not currently possible to nest transactions
+    function beginQueueTransaction() {
+      if (transacting) {
+        console.log("WARNING: Tried to begin a queue transaction while another was open. Ignoring.");
+        return;
+      }
+      transactionEntries = [];
+      transacting = true;
+    }
+
+    function endQueueTransaction() {
+      if (!transacting) {
+        console.log("WARNING: Tried to close a queue transaction without opening it first.");
+        return;
+      }
+      transacting = false;
+      if (transactionEntries.length === 0) {
+        return;
+      }
+
+      var entriesToRun = transactionEntries;
+      var transactionDescription = "Transaction:\n" + entriesToRun.map(function (entry) {
+        return '\t\t' + entry.description;
+      }).join('\n');
+      queue(function (next) {
+        // Keep track of total number of concurrent actions in the transaction
+        var totalEntriesToRun = entriesToRun.length;
+
+        // Kick off all the actions
+        entriesToRun.forEach(function (entry) {
+          // Run each action with a patched `next` that decrements the total entries left to run
+          entry.action(function () {
+            totalEntriesToRun--;
+            if (totalEntriesToRun === 0) {
+              // If all the entries have run, move on in the queue
+              next();
+            }
+          });
+        });
+      }, transactionDescription);
+    }
+
+    function withQueueTransaction(code) {
+      beginQueueTransaction();
+      code();
+      endQueueTransaction();
+    }
   }
 
   function Card(i) {
@@ -711,7 +872,7 @@ var Deck = (function () {
       var y = _params$y === undefined ? self.y : _params$y;
       var _params$rot = params.rot;
       var rot = _params$rot === undefined ? self.rot : _params$rot;
-      var ease$$ = params.ease;
+      var ease$1 = params.ease;
       var onStart = params.onStart;
       var onProgress = params.onProgress;
       var onComplete = params.onComplete;
@@ -727,7 +888,7 @@ var Deck = (function () {
         startRot = self.rot || 0;
         onStart && onStart();
       }).progress(function (t) {
-        var et = ease[ease$$ || 'cubicInOut'](t);
+        var et = ease[ease$1 || 'cubicInOut'](t);
 
         diffX = x - startX;
         diffY = y - startY;
@@ -864,10 +1025,10 @@ var Deck = (function () {
         if (!helperShowing) {
           self.queued(function (next) {
             // Position the helper
-            var cardWidth = util.getCardWidth(self.deck);
+            var cardWidth = Util.getCardWidth(self.deck);
             var spacing = cardWidth / 10;
             var helperZ = self.cards.length / 4;
-            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * util.getFontSize(self.deck);
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * Util.getFontSize(self.deck);
             helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
             helper.$el.style['opacity'] = 0;
 
@@ -907,12 +1068,12 @@ var Deck = (function () {
       }
     };
 
-    self.layout = function (info) {
+    self.layout = function (info, options) {
       if (self.cards.length === 0 && !helperShowing) {
         return;
       }
       var cardsToAnimate = self.cards.slice();
-      var cardWidth = util.getCardWidth(self.deck);
+      var cardWidth = Util.getCardWidth(self.deck);
       var spacing = cardWidth / 10;
       self.queued(function (next) {
         if (cardsToAnimate.length > 0) {
@@ -921,8 +1082,8 @@ var Deck = (function () {
             card.setSide(self.side);
             card.$el.style.zIndex = i;
             card.animateTo({
-              delay: 0,
-              duration: 500,
+              delay: options && options.delay || 0,
+              duration: options && options.duration || 500,
 
               x: self.x - z,
               y: self.y - z,
@@ -937,7 +1098,7 @@ var Deck = (function () {
           });
           if (helperShowing) {
             var helperZ = cardsToAnimate.length / 4;
-            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * util.getFontSize(self.deck);
+            var helperX = self.x + cardWidth / 2 + spacing + cardWidth / 8 - helperZ + 8 * Util.getFontSize(self.deck);
             helper.$el.style[transform] = translate(helperX + 'px', self.y - helperZ + 'px');
           }
         } else {
@@ -1062,11 +1223,11 @@ var Deck = (function () {
           self.queued(function (next) {
             // Position the helper
             if (self.cards.length > 0) {
-              var cardWidth = util.getCardWidth(self.deck);
+              var cardWidth = Util.getCardWidth(self.deck);
               var spacing = cardWidth / 10;
               var handWidth = cardWidth * (self.cards.length - 1) + spacing * (self.cards.length - 1);
               var handStartX = -(handWidth / 2);
-              var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8 + 8 * util.getFontSize(self.deck);
+              var helperX = handStartX + (cardWidth + spacing) * self.cards.length - 3 * cardWidth / 8 + 8 * Util.getFontSize(self.deck);
               var rads = self.rot * Math.PI / 180;
               var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
               var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
@@ -1114,13 +1275,13 @@ var Deck = (function () {
       }
     };
 
-    self.layout = function (info) {
+    self.layout = function (info, options) {
       if (self.cards.length === 0 && !helperShowing) {
         return;
       }
       var cardsToAnimate = self.cards.slice();
-      var cardWidth = util.getCardWidth(self.deck);
-      var cardHeight = util.getCardHeight(self.deck);
+      var cardWidth = Util.getCardWidth(self.deck);
+      var cardHeight = Util.getCardHeight(self.deck);
       var spacing = cardWidth / 10;
       self.queued(function (next) {
 
@@ -1142,7 +1303,8 @@ var Deck = (function () {
             var rotatedX = cardX * Math.cos(rads) - cardY * Math.sin(rads);
             var rotatedY = cardX * Math.sin(rads) + cardY * Math.cos(rads);
             card.animateTo({
-              duration: 500,
+              delay: options && options.delay || 0,
+              duration: options && options.duration || 500,
               x: self.x + rotatedX,
               y: self.y + rotatedY,
               rot: self.rot,
@@ -1155,7 +1317,7 @@ var Deck = (function () {
           });
 
           if (helperShowing) {
-            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - 3 * cardWidth / 8 + 8 * util.getFontSize(self.deck);
+            var helperX = startX + (cardWidth + spacing) * cardsToAnimate.length - 3 * cardWidth / 8 + 8 * Util.getFontSize(self.deck);
             var rads = self.rot * Math.PI / 180;
             var rotatedX = helperX * Math.cos(rads); // Always goes to zero: - (y * Math.sin(rads));
             var rotatedY = helperX * Math.sin(rads); // Always goes to zero: + (y * Math.cos(rads));
@@ -1286,59 +1448,6 @@ var Deck = (function () {
     return self;
   }
 
-  function observable(target) {
-    target || (target = {});
-    var listeners = {};
-
-    target.on = on;
-    target.one = one;
-    target.off = off;
-    target.trigger = trigger;
-
-    return target;
-
-    function on(name, cb, ctx) {
-      listeners[name] || (listeners[name] = []);
-      listeners[name].push({ cb: cb, ctx: ctx });
-    }
-
-    function one(name, cb, ctx) {
-      listeners[name] || (listeners[name] = []);
-      listeners[name].push({
-        cb: cb, ctx: ctx, once: true
-      });
-    }
-
-    function trigger(name) {
-      var self = this;
-      var args = Array.prototype.slice(arguments, 1);
-
-      var currentListeners = listeners[name] || [];
-
-      currentListeners.filter(function (listener) {
-        listener.cb.apply(self, args);
-
-        return !listener.once;
-      });
-    }
-
-    function off(name, cb) {
-      if (!name) {
-        listeners = {};
-        return;
-      }
-
-      if (!cb) {
-        listeners[name] = [];
-        return;
-      }
-
-      listeners[name] = listeners[name].filter(function (listener) {
-        return listener.cb !== cb;
-      });
-    }
-  }
-
   function Clique(deck, cards, params) {
     var id = params && params.id || deck.generateNextCliqueId();
 
@@ -1392,114 +1501,6 @@ var Deck = (function () {
 
   Clique.Pile = Pile;
   Clique.Hand = Hand;
-
-  function queue(target) {
-    var array = Array.prototype;
-
-    var queueing = [];
-
-    var transacting = false;
-    var transactionEntries = [];
-
-    target.queue = queue;
-    target.queued = queued;
-    target.beginQueueTransaction = beginQueueTransaction;
-    target.endQueueTransaction = endQueueTransaction;
-    target.withQueueTransaction = withQueueTransaction;
-
-    return target;
-
-    function queued(action, description) {
-      return function () {
-        var self = this;
-        var args = arguments;
-
-        queue(function (next) {
-          action.apply(self, array.concat.apply(next, args));
-        }, description);
-      };
-    }
-
-    function queue(action, description) {
-      if (!action) {
-        return;
-      }
-
-      if (transacting) {
-        transactionEntries.push({ action: action, description: description });
-      } else {
-        queueing.push({ action: action, description: description });
-        // console.log("QUEUE:\n" + queueing.map(entry => '\t' + entry.description).join('\n'));
-
-        if (queueing.length === 1) {
-          next();
-        }
-      }
-    }
-
-    function next() {
-      var frame = queueing[0];
-      frame.action(function (err) {
-        if (err) {
-          throw err;
-        }
-
-        queueing = queueing.slice(1);
-
-        if (queueing.length) {
-          next();
-        }
-      });
-    }
-
-    // @NOTE/@TODO: It's not currently possible to nest transactions
-    function beginQueueTransaction() {
-      if (transacting) {
-        console.log("WARNING: Tried to begin a queue transaction while another was open. Ignoring.");
-        return;
-      }
-      transactionEntries = [];
-      transacting = true;
-    }
-
-    function endQueueTransaction() {
-      if (!transacting) {
-        console.log("WARNING: Tried to close a queue transaction without opening it first.");
-        return;
-      }
-      transacting = false;
-      if (transactionEntries.length === 0) {
-        return;
-      }
-
-      var entriesToRun = transactionEntries;
-      var transactionDescription = "Transaction:\n" + entriesToRun.map(function (entry) {
-        return '\t\t' + entry.description;
-      }).join('\n');
-      queue(function (next) {
-        // Keep track of total number of concurrent actions in the transaction
-        var totalEntriesToRun = entriesToRun.length;
-
-        // Kick off all the actions
-        entriesToRun.forEach(function (entry) {
-          // Run each action with a patched `next` that decrements the total entries left to run
-          entry.action(function () {
-            totalEntriesToRun--;
-            if (totalEntriesToRun === 0) {
-              // If all the entries have run, move on in the queue
-              next();
-            }
-          });
-        });
-      }, transactionDescription);
-    }
-
-    function withQueueTransaction(code) {
-      beginQueueTransaction();
-      code();
-      endQueueTransaction();
-    }
-  }
 
   function Deck(jokers) {
     // init cards array
@@ -1569,7 +1570,7 @@ var Deck = (function () {
   Deck.Card = Card;
   Deck.prefix = prefix;
   Deck.translate = translate;
-  Deck.Util = util;
+  Deck.Util = Util;
   Deck.Clique = Clique;
 
   return Deck;

@@ -43,13 +43,13 @@
     "chokidar": "^1.0.5",
     "jade": "^1.11.0",
     "nib": "^1.1.0",
-    "rollup": "^0.16.4",
+    "rollup": "^2.0.0",
     "stylus": "^0.52.0",
     "uglify-js": "^2.4.24"
   },
   "dependencies": {
     "npm-watch": "^0.6.0",
-    "opencollective-postinstall": "^2.0.2"
+    "opencollective-postinstall": "^2.0.3"
   },
   "collective": {
     "type": "opencollective",
