@@ -1347,6 +1347,10 @@ var Deck = (function () {
       return self.prominentCards.has(index);
     };
 
+    self.clearProminentCards = function () {
+      self.prominentCards.clear();
+    };
+
     self.setCardSelectable = function (card, selectable) {
       if (selectable) {
         card.setGlow(true);
